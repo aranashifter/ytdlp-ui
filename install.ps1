@@ -1,6 +1,6 @@
 # yt-dlp Web UI - one-line installer / updater
 # GitHub e upload korar AGE shudhu nicher line e USER/REPO bodle nijer ta likhun (jemon rahim/ytdlp-ui)
-$repo = 'USER/REPO'
+$repo = 'aranashifter/ytdlp-ui'
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
