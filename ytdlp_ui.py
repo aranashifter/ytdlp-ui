@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 yt-dlp Web UI  -  local only, no pip install needed (Python standard library).
+Developed by Rakib Al Hasan (GitHub: @aranashifter) - https://github.com/aranashifter/ytdlp-ui
 Put this file, index.html and start.bat in the SAME folder as yt-dlp.exe / ffmpeg.exe
 """
 import json, os, re, shlex, shutil, subprocess, sys, threading, queue, time, uuid, webbrowser
@@ -701,6 +702,7 @@ def main():
     url = "http://127.0.0.1:%d" % srv.server_address[1]
     print("=" * 50)
     print(" yt-dlp Web UI chalu hoyeche:", url)
+    print(" Developed by Rakib Al Hasan (@aranashifter)")
     print(" yt-dlp :", YTDLP or "NOT FOUND")
     print(" Ei window bondho korle UI bondho hoye jabe.")
     print("=" * 50)

@@ -20,6 +20,12 @@ Same folder e PowerShell khule same command abar chalao. Tool file gulo notun ho
 Remove-Item -Recurse -Force ".\ytdlp-ui"
 ```
 
+## Developer
+**Rakib Al Hasan** - GitHub: [@aranashifter](https://github.com/aranashifter)
+Project: https://github.com/aranashifter/ytdlp-ui
+
+Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org).
+
 ## Files
 ytdlp_ui.py (server), index.html (UI), start.bat, setup.ps1, install.ps1
 
