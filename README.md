@@ -4,18 +4,18 @@ yt-dlp-er jonno ekta shohoj browser UI. Link paste koro, quality / audio / subti
 
 ## Install
 1. Jekhane rakhte chao shei folder khulo (jemon `D:\Tools`), folder-er address bar e `powershell` likhe Enter dao.
-2. Ei ek line paste koro:
+2. Ei ek line paste koro and enter deo:
 ```
 irm https://raw.githubusercontent.com/aranashifter/ytdlp-ui/main/install.ps1 | iex
 ```
 Oi folder-er bhitore `ytdlp-ui` naam e folder toyri hobe, sob oikhane thakbe (tool, yt-dlp, ffmpeg, deno, Downloads).
 Prothombar 2-5 min lagbe. Pore chalate: `ytdlp-ui\start.bat` double click.
 
-## Update
+## Update korte
 Same folder e PowerShell khule same command abar chalao. Tool file gulo notun hobe, Downloads / yt-dlp.exe / ffmpeg ager moto thakbe.
 
-## Muche felte
-`ytdlp-ui` folder ta delete koro. Ba:
+## Remove korte
+`ytdlp-ui` folder ta delete koro. Ba command deo:
 ```
 Remove-Item -Recurse -Force ".\ytdlp-ui"
 ```
