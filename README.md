@@ -4,9 +4,9 @@ yt-dlp-er jonno ekta shohoj browser UI. Link paste koro, quality / audio / subti
 
 ## Install (PowerShell e ei ek line paste koro)
 ```
-irm https://raw.githubusercontent.com/USER/REPO/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/aranashifter/ytdlp-ui/main/install.ps1 | iex
 ```
-(USER/REPO er jaygay GitHub username/repo-name)
+
 
 Install hobe: `C:\Users\<tomar-naam>\ytdlp-ui`
 Prothombar 2-5 min lagbe (yt-dlp, ffmpeg, deno nije download hobe).
