@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>yt-dlp Downloader</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--card2:#1f232c;--bd:#2a2f3a;--tx:#e6e8ee;--mut:#8b93a5;--ac:#ff4d4d;--ac2:#3b82f6;--ok:#22c55e;--warn:#f59e0b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1050px;margin:0 auto;padding:18px}
+h1{font-size:20px;margin:0}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.sub{color:var(--mut);font-size:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px}
+textarea,input[type=text],select{width:100%;background:var(--card2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font:inherit}
+textarea{min-height:70px;resize:vertical}
+label{display:flex;align-items:center;gap:6px;cursor:pointer}
+button{background:var(--card2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--mut)}
+button.pri{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+button.blue{background:var(--ac2);border-color:var(--ac2);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.field>span{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
+.list{max-height:200px;overflow:auto;background:var(--card2);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+.list label{padding:2px 0;font-size:13px}
+.hide{display:none!important}
+.msg{padding:8px 10px;border-radius:8px;margin-top:10px;font-size:13px}
+.msg.err{background:#3a1d1d;color:#ffb4b4}
+.msg.info{background:#1d2a3a;color:#b4d4ff}
+.meta{display:flex;gap:12px;align-items:flex-start}
+.meta img{width:160px;border-radius:8px;flex:none}
+.pl-item{display:flex;gap:6px;align-items:center}
+.pl-item small{color:var(--mut)}
+.job{background:var(--card2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px}
+.job .t{font-weight:600;word-break:break-word}
+.bar{height:8px;background:#2b303b;border-radius:99px;overflow:hidden;margin:8px 0 4px}
+.bar>div{height:100%;background:var(--ac2);transition:width .3s}
+.job.done .bar>div{background:var(--ok)}.job.error .bar>div{background:var(--ac)}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;background:#2b303b;color:var(--mut);margin-left:6px}
+.badge.running{background:#1d3a5c;color:#9cc7ff}.badge.done{background:#17361f;color:#8be0a4}.badge.error{background:#3a1d1d;color:#ffb4b4}
+pre{background:#0b0d11;border-radius:8px;padding:8px;max-height:220px;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-all;margin:6px 0 0}
+details summary{cursor:pointer;color:var(--mut)}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.seg label{padding:7px 14px;background:var(--card2)}
+.seg input{display:none}
+.seg label:has(input:checked){background:var(--ac2);color:#fff}
+.tblwrap{max-height:260px;overflow:auto;margin-top:8px;border:1px solid var(--bd);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{position:sticky;top:0;background:var(--card2);color:var(--mut)}
+tr:hover td{background:#222733}
+.tag{font-size:10px;background:#2b303b;border-radius:4px;padding:1px 5px;color:var(--mut)}
+.msg.warn{background:#3a2f12;color:#ffd98a}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>⬇ yt-dlp Downloader</h1><div class="sub" id="cfg">loading…</div></div>
+  <div class="row"><button onclick="openFolder()">📂 Open folder</button><button onclick="updateYt(false)" id="updBtn">Update yt-dlp</button><button onclick="updateYt(true)" title="YouTube kaj na korle nightly try korun">Update (nightly)</button></div>
+</header>
+<div id="jsWarn"></div>
+
+<div class="card">
+  <h2>1 · Video / Playlist link</h2>
+  <textarea id="urls" placeholder="Link paste korun (ekadhik link hole protita alada line e)"></textarea>
+  <div class="row" style="margin-top:10px">
+    <label><input type="checkbox" id="isPl"> Playlist hishebe download</label>
+    <select id="cookies" style="width:auto" title="Age-restricted / private video er jonno browser cookies">
+      <option value="">Cookies: none</option><option>chrome</option><option>edge</option><option>firefox</option><option>brave</option><option>opera</option><option>vivaldi</option>
+    </select>
+    <button class="blue" id="fetchBtn" onclick="fetchInfo()">🔍 Fetch info (quality, audio, subs)</button>
+  </div>
+  <div id="infoMsg"></div>
+</div>
+
+<div class="card hide" id="infoCard">
+  <h2>Video info</h2>
+  <div class="meta"><img id="thumb" class="hide"><div><div id="vTitle" style="font-weight:600;font-size:16px"></div><div class="sub" id="vSub"></div></div></div>
+  <div id="plBox" class="hide" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between"><b>Playlist items (<span id="plSel">0</span>/<span id="plCnt">0</span>)</b>
+      <span class="row"><button onclick="plAll(true)">All</button><button onclick="plAll(false)">None</button></span></div>
+    <div class="list" id="plList" style="max-height:260px;margin-top:6px"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>2 · Options</h2>
+  <div class="row" style="margin-bottom:12px">
+    <div class="seg"><label><input type="radio" name="mode" value="video" checked> 🎬 Video</label><label><input type="radio" name="mode" value="audio"> 🎵 Audio only</label></div>
+  </div>
+  <div class="grid">
+    <label class="field vid" style="display:block"><span>Quality (size / bitrate soho)</span><select id="height"><option value="best">Best available</option></select></label>
+    <label class="field vid" style="display:block"><span>Container</span><select id="container"><option value="mp4">MP4</option><option value="mkv">MKV</option><option value="webm">WEBM</option></select></label>
+    <label class="field aud hide" style="display:block"><span>Audio format</span><select id="afmt"><option>mp3</option><option>m4a</option><option>opus</option><option>flac</option><option>wav</option><option>best</option></select></label>
+    <label class="field" style="display:block"><span>Thumbnail</span><select id="thumbOpt"><option value="none">Don't download</option><option value="embed">Embed in file</option><option value="file">Save as image file</option><option value="both">Embed + save image</option></select></label>
+    <label class="field" style="display:block"><span>Save to folder</span><input type="text" id="dir"></label>
+  </div>
+
+  <div id="estimate" class="msg info hide" style="margin-top:12px"></div>
+
+  <details id="fmtBox" class="hide" open style="margin-top:14px"><summary>📋 Sob available format (yt-dlp -F er moto): resolution, bitrate, size</summary>
+    <div class="row" style="margin-top:8px;gap:18px">
+      <label><input type="checkbox" id="showHls"> HLS (m3u8) format dekhao</label>
+    </div>
+    <div class="sub" style="margin-top:6px">Video: ekta row te radio chapo (upore Quality dropdown o sathe sathe change hobe). Audio: ek ba ekadhik tick koro (ekadhik hole MKV te merge hobe). Audio na tick korle nicher "Audio language" ba best audio use hobe.</div>
+    <div class="tblwrap"><table id="vTbl"></table></div>
+    <div class="tblwrap"><table id="aTbl"></table></div>
+  </details>
+
+  <div class="grid" style="margin-top:14px">
+    <div class="field" id="audBox"><span>Audio language / track (ekadhik select korle sob ekshathe merge hobe, MKV hoy)</span>
+      <div class="list" id="audList"><span class="sub">Fetch info korle audio track dekhabe</span></div></div>
+    <div class="field"><span>Subtitles (manual)</span><div class="list" id="subList"><span class="sub">Fetch info korle dekhabe</span></div></div>
+    <div class="field"><span>Subtitles (auto-generated / auto-translated)</span>
+      <input type="text" id="autoFilter" placeholder="Search language…" style="margin-bottom:4px;padding:5px 8px">
+      <div class="list" id="autoList"><span class="sub">Fetch info korle dekhabe</span></div></div>
+  </div>
+
+  <div class="row" style="margin-top:14px;gap:18px">
+    <label class="vid"><input type="checkbox" id="embedSubs" checked> Subtitle video te embed koro</label>
+    <label class="vid"><input type="checkbox" id="compat" checked> H.264/AAC prefer (sob device e chole)</label>
+    <label><input type="checkbox" id="embedMeta" checked> Metadata embed</label>
+    <label class="vid"><input type="checkbox" id="chapters"> Chapters embed</label>
+    <label><input type="checkbox" id="sponsor"> SponsorBlock: sponsor part remove</label>
+  </div>
+  <div class="row plopt hide" style="margin-top:10px;gap:18px">
+    <label><input type="checkbox" id="plFolder" checked> Playlist er alada folder</label>
+    <label><input type="checkbox" id="plNum" checked> File name e 001, 002… number</label>
+  </div>
+
+  <details style="margin-top:14px"><summary>Advanced</summary>
+    <div class="grid" style="margin-top:8px">
+      <label class="field" style="display:block"><span>Custom format (-f), e.g. 137+140</span><input type="text" id="custom"></label>
+      <label class="field" style="display:block"><span>Speed limit (e.g. 2M, 500K)</span><input type="text" id="rate"></label>
+      <label class="field" style="display:block"><span>Shudhu ekta ongsho (start-end), e.g. 00:10:00-01:00:00</span><input type="text" id="section" placeholder="boro / live stream er jonno"></label>
+      <label class="field" style="display:block"><span>YouTube client (403 hole try korun)</span><select id="client"><option value="">Auto (403 hole nije retry kore)</option><option>tv</option><option>web_safari</option><option>web</option><option>mweb</option><option>android_vr</option><option>ios</option></select></label>
+      <label class="field" style="display:block"><span>&nbsp;</span><label><input type="checkbox" id="remoteEjs"> Remote JS components (ejs:github) allow</label></label>
+      <label class="field" style="display:block"><span>Extra yt-dlp arguments</span><input type="text" id="extra" placeholder="--no-mtime"></label>
+    </div>
+  </details>
+
+  <div class="row" style="margin-top:16px"><button class="pri" id="dlBtn" onclick="startDownload()">⬇ Download</button><span class="sub" id="dlHint"></span></div>
+</div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">3 · Downloads</h2><button onclick="clearDone()">Clear finished</button></div>
+  <div id="jobs" style="margin-top:10px"><span class="sub">Kono download nai</span></div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(p,b){const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});return r.json();}
+let info=null, openLogs=new Set(), lastEst=0, lastJobs=[];
+
+(async()=>{
+  const c=await api('/api/config');
+  $('dir').value=c.default_dir;
+  $('cfg').innerHTML=c.ytdlp?`yt-dlp ${esc(c.version)} · ffmpeg ${c.ffmpeg?'✅':'❌'} · JS runtime ${c.js?'✅ '+esc(c.js):'❌ none'}`:'❌ yt-dlp.exe paoa jay nai - ei folder e rakhun';
+  if(c.ytdlp&&!c.js)$('jsWarn').innerHTML='<div class="msg warn" style="margin-bottom:14px"><b>⚠ JS runtime (deno) nai.</b> Notun yt-dlp e YouTube er jonno eta lage - na thakle <b>403 Forbidden</b> error ba kom quality dekhay. Fix: <code>deno.exe</code> (free) download kore yt-dlp.exe er pashe rakhun (github.com/denoland/deno/releases → deno-x86_64-pc-windows-msvc.zip) ba cmd e <code>winget install DenoLand.Deno</code> likhun. Tarpor start.bat abar chalan.</div>';
+  loadJobs(); setInterval(loadJobs,1000);
+})();
+
+function mode(){return document.querySelector('input[name=mode]:checked').value}
+document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>{
+  const a=mode()==='audio';
+  document.querySelectorAll('.vid').forEach(e=>e.classList.toggle('hide',a));
+  document.querySelectorAll('.aud').forEach(e=>e.classList.toggle('hide',!a));
+});
+function urlList(){return $('urls').value.split(/\s+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s))}
+$('urls').addEventListener('input',()=>{
+  const u=urlList();
+  if(u.length===1&&/[?&]list=/.test(u[0])&&!/[?&]v=/.test(u[0])) $('isPl').checked=true;
+  syncPl();
+});
+$('isPl').onchange=syncPl;
+function syncPl(){document.querySelectorAll('.plopt').forEach(e=>e.classList.toggle('hide',!$('isPl').checked))}
+
+async function fetchInfo(){
+  const u=urlList();
+  if(!u.length){msg('infoMsg','Age ekta valid link din','err');return}
+  $('fetchBtn').disabled=true; msg('infoMsg','Info anchi… (playlist boro hole ektu somoy lagte pare)','info');
+  const r=await api('/api/info',{url:u[0],playlist:$('isPl').checked,cookies:$('cookies').value});
+  $('fetchBtn').disabled=false;
+  if(r.error){msg('infoMsg',r.error,'err');return}
+  info=r; info._url=u[0]; $('infoMsg').innerHTML=''; renderInfo();
+}
+function msg(id,t,c){$(id).innerHTML=`<div class="msg ${c}">${esc(t)}</div>`}
+function fmtDur(s){if(!s)return'';s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(x).padStart(2,'0')}
+
+function renderInfo(){
+  $('infoCard').classList.remove('hide');
+  $('vTitle').textContent=info.title||'';
+  $('vSub').textContent=[info.uploader,info.duration?fmtDur(info.duration):'',info.playlist?info.playlist.count+' videos':''].filter(Boolean).join(' · ');
+  if(info.thumbnail){$('thumb').src=info.thumbnail;$('thumb').classList.remove('hide')}else $('thumb').classList.add('hide');
+  // playlist
+  if(info.playlist){
+    $('isPl').checked=true; syncPl(); $('plBox').classList.remove('hide'); $('plCnt').textContent=info.playlist.count;
+    $('plList').innerHTML=info.playlist.entries.map(e=>`<label class="pl-item"><input type="checkbox" class="pli" value="${e.index}" checked onchange="plCount()"><small>${e.index}.</small> ${esc(e.title)} <small>${fmtDur(e.duration)}</small></label>`).join('');
+    plCount();
+  } else $('plBox').classList.add('hide');
+  buildQuality();
+  if(info.warn&&info.warn.length)$('infoMsg').innerHTML=info.warn.map(w=>`<div class="msg warn">${esc(w)}</div>`).join('');
+  renderFormats();
+  // audio langs
+  $('audList').innerHTML=(info.audio_langs&&info.audio_langs.length>1)
+    ? info.audio_langs.map(a=>`<label><input type="checkbox" class="aud-c" value="${esc(a.code)}"> [${esc(a.code)}] ${esc(a.name)}${audInfo(a.code)}</label>`).join('')
+    : '<span class="sub">Ei video te ekta-i audio track (default use hobe)</span>';
+  $('subList').innerHTML=(info.subs&&info.subs.length)?info.subs.map(s=>`<label><input type="checkbox" class="sub-m" value="${esc(s.code)}"> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):'<span class="sub">Manual subtitle nai</span>';
+  $('autoList').innerHTML=(info.auto_subs&&info.auto_subs.length)?info.auto_subs.map(s=>`<label data-s="${esc((s.code+' '+s.name).toLowerCase())}"><input type="checkbox" class="sub-a" value="${esc(s.code)}"> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):'<span class="sub">Auto subtitle nai</span>';
+  estimate();
+}
+$('autoFilter').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#autoList label').forEach(l=>l.classList.toggle('hide',!l.dataset.s.includes(q)))};
+const fmtSize=b=>b?(b>=1073741824?(b/1073741824).toFixed(2)+' GiB':(b/1048576).toFixed(1)+' MiB'):'';
+const isHls=f=>/m3u8/.test(f.proto||'');
+const codecName=c=>({avc1:'H.264',vp09:'VP9',vp9:'VP9',av01:'AV1',hev1:'HEVC',hvc1:'HEVC'}[c]||c);
+const kb=f=>{const b=f.abr||f.tbr;return b?Math.round(b)+'k':'?'};
+const hdrTxt=f=>f.hdr&&f.hdr!=='SDR'?' '+f.hdr:'';
+function vlabel(f){return `${f.h}p${f.fps>30?Math.round(f.fps):''}${hdrTxt(f)} · ${codecName(f.vc)} · ${f.tbr?Math.round(f.tbr)+'k':'?'} · ${fmtSize(f.size)||'size ?'} · ${f.ext}${f.ac!=='none'?' (+audio)':''}${isHls(f)?' · HLS':''}`}
+function videoRows(){return (info.formats||[]).filter(f=>f.vc!=='none'&&f.h&&($('showHls').checked||!isHls(f))).sort((a,b)=>(b.h||0)-(a.h||0)||(b.fps||0)-(a.fps||0)||(b.tbr||0)-(a.tbr||0))}
+function buildQuality(){
+  const V=videoRows(), hs=[...new Set(V.map(f=>f.h))];
+  $('height').innerHTML='<option value="best">Best available (auto)'+(hs.length?` · ${hs[0]}p`:'')+'</option>'+
+    (hs.length?'<optgroup label="Auto: oi resolution er best">'+hs.map(h=>`<option value="${h}">${h}p (auto)</option>`).join('')+'</optgroup>':'')+
+    (V.length?'<optgroup label="Exact format (bitrate · size)">'+V.map(f=>`<option value="f:${esc(f.id)}">${esc(vlabel(f))}</option>`).join('')+'</optgroup>':'');
+}
+$('showHls').onchange=()=>{const cur=$('height').value;buildQuality();if([...$('height').options].some(o=>o.value===cur))$('height').value=cur;renderFormats();estimate()};
+function renderFormats(){
+  const all=info.formats||[]; if(!all.length){$('fmtBox').classList.add('hide');return}
+  $('fmtBox').classList.remove('hide');
+  const ok=f=>$('showHls').checked||!isHls(f), V=videoRows();
+  const A=all.filter(f=>f.vc==='none'&&f.ac!=='none'&&ok(f)).sort((a,b)=>(b.abr||b.tbr||0)-(a.abr||a.tbr||0));
+  const cur=$('height').value.startsWith('f:')?$('height').value.slice(2):'';
+  $('vTbl').innerHTML='<tr><th></th><th>ID</th><th>Resolution</th><th>FPS</th><th>Codec</th><th>Bitrate</th><th>Size</th><th>Ext</th><th>Notes</th></tr>'+
+    V.map(f=>`<tr><td><input type="radio" name="vf" value="${esc(f.id)}" ${f.id===cur?'checked':''}></td><td>${esc(f.id)}</td><td>${f.w||'?'}x${f.h||'?'} (${f.h}p)</td><td>${f.fps||''}</td><td>${esc(codecName(f.vc))}</td><td>${f.tbr?Math.round(f.tbr)+'k':''}</td><td>${fmtSize(f.size)}</td><td>${esc(f.ext)}</td><td>${f.ac!=='none'?'<span class="tag">+audio</span> ':''}${f.hdr&&f.hdr!=='SDR'?'<span class="tag">'+esc(f.hdr)+'</span> ':''}${isHls(f)?'<span class="tag">HLS</span>':''}</td></tr>`).join('');
+  $('aTbl').innerHTML='<tr><th></th><th>ID</th><th>Language / track</th><th>Codec</th><th>Bitrate</th><th>Size</th><th>Ext</th></tr>'+
+    A.map(f=>`<tr><td><input type="checkbox" class="fa" value="${esc(f.id)}"></td><td>${esc(f.id)}</td><td>${esc(f.lang?'['+f.lang+'] ':'')}${esc((f.note||'').split(',')[0])}</td><td>${esc(f.ac)}</td><td>${kb(f)}</td><td>${fmtSize(f.size)}</td><td>${esc(f.ext)}</td></tr>`).join('');
+}
+function bestAudio(lang){
+  let c=(info.formats||[]).filter(f=>f.vc==='none'&&f.ac!=='none'&&(lang?f.lang===lang:true));
+  const nh=c.filter(f=>!isHls(f)); if(nh.length)c=nh;
+  const m4a=$('container').value==='mp4'&&mode()==='video';
+  c.sort((a,b)=>(b.abr||b.tbr||0)-(a.abr||a.tbr||0)||(m4a?((b.ext==='m4a')-(a.ext==='m4a')):0));
+  return c[0]||null;
+}
+function audInfo(l){const f=bestAudio(l);return f?` · ${f.ac} ${kb(f)}${f.size?' · '+fmtSize(f.size):''}`:''}
+function audioRows(){
+  const manual=checked('.fa'); if(manual.length)return manual.map(id=>info.formats.find(f=>f.id===id)).filter(Boolean);
+  return checked('.aud-c').map(bestAudio).filter(Boolean);
+}
+function exactFormat(){
+  if(!info||!info.formats)return '';
+  if(mode()==='audio'){const a=checked('.fa');return a.length?a[0]:''}
+  const val=$('height').value; if(!val.startsWith('f:'))return '';
+  const row=info.formats.find(f=>f.id===val.slice(2)); if(!row)return '';
+  const ids=[row.id];
+  if(row.ac==='none'){const a=audioRows();ids.push(...(a.length?a.map(f=>f.id):['ba']))}
+  return ids.join('+');
+}
+function estimate(){
+  const box=$('estimate');
+  if(!info||!info.formats||!info.formats.length){box.classList.add('hide');return}
+  const fm=info.formats; let v=null, parts=[], total=0, unknown=false;
+  if(mode()==='video'){
+    const val=$('height').value, pool=fm.filter(f=>f.vc!=='none'&&f.h&&!isHls(f));
+    if(val.startsWith('f:'))v=fm.find(f=>f.id===val.slice(2));
+    else{
+      const order=($('compat').checked&&$('container').value==='mp4')?['avc1','vp09','av01']:['av01','vp09','avc1'];
+      const rank=f=>{const i=order.indexOf(f.vc);return i<0?9:i};
+      const p=(val==='best'?pool:pool.filter(f=>f.h<=+val)).slice().sort((a,b)=>(b.h-a.h)||((b.fps||0)-(a.fps||0))||(rank(a)-rank(b))||((b.tbr||0)-(a.tbr||0)));
+      v=p[0]||null;
+    }
+    if(v){parts.push(`video ${v.h}p ${codecName(v.vc)} ${v.tbr?Math.round(v.tbr)+'k':''} = ${fmtSize(v.size)||'?'}`);if(v.size)total+=v.size;else unknown=true}
+  }
+  if(!v||v.ac==='none'){
+    let a=audioRows(); if(!a.length){const b=bestAudio(null);a=b?[b]:[]}
+    a.forEach(f=>{parts.push(`audio${f.lang?' ['+f.lang+']':''} ${f.ac} ${kb(f)} = ${fmtSize(f.size)||'?'}`);if(f.size)total+=f.size;else unknown=true});
+  }
+  lastEst=total; box.classList.remove('hide');
+  box.innerHTML=total?`📦 <b>Estimated size: ~${fmtSize(total)}</b>${unknown?' (kichu part er size jana nai)':''} <span class="sub">— ${esc(parts.join(' + '))}${info.playlist?' · protita video er jonno proyojon onujayi alada':''}</span>`:'📦 Size jana jachhe na (ei video r format e size dey nai)';
+  if(total>5*1073741824){box.innerHTML+=`<div style="margin-top:8px;color:#ffd98a">⚠ <b>Boro file.</b> Protita embed step (merge, subs, thumbnail, metadata) e puro ${fmtSize(total)} file abar copy hoy, tai ghonta ghonta lage ar ~${fmtSize(total*2.1)} free disk lage. Cancel korle file corrupt hoy. Poramorsho: kom quality (720p) / ekta ongsho (Advanced) / fast settings. <button class="blue" style="padding:3px 10px;margin-left:6px" onclick="applyFast()">⚡ Fast settings apply</button></div>`}
+}
+function applyFast(){
+  $('embedSubs').checked=false;$('embedMeta').checked=false;$('chapters').checked=false;$('compat').checked=false;
+  if($('thumbOpt').value==='embed'||$('thumbOpt').value==='both')$('thumbOpt').value='file';
+  $('container').value='mkv';estimate();
+}
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.name==='vf'){$('height').value='f:'+t.value}
+  if(t.id==='height'){document.querySelectorAll('input[name=vf]').forEach(r=>r.checked=(t.value==='f:'+r.value))}
+  if(info&&(t.id==='height'||t.name==='vf'||t.name==='mode'||['container','compat'].includes(t.id)||t.classList.contains('fa')||t.classList.contains('aud-c')))estimate();
+});
+function plAll(v){document.querySelectorAll('.pli').forEach(c=>c.checked=v);plCount()}
+function plCount(){$('plSel').textContent=document.querySelectorAll('.pli:checked').length}
+const checked=c=>[...document.querySelectorAll(c+':checked')].map(e=>e.value);
+function toRanges(a){a=a.map(Number).sort((x,y)=>x-y);const o=[];let s=null,p=null;for(const n of a){if(s===null){s=p=n}else if(n===p+1){p=n}else{o.push(s===p?''+s:s+'-'+p);s=p=n}}if(s!==null)o.push(s===p?''+s:s+'-'+p);return o.join(',')}
+
+async function startDownload(){
+  const u=urlList(); if(!u.length){alert('Link din');return}
+  const o={mode:mode(),height:$('height').value.startsWith('f:')?'best':$('height').value,container:$('container').value,audio_format:$('afmt').value,
+    thumb:$('thumbOpt').value,dir:$('dir').value,audio_langs:checked('.aud-c'),subs:checked('.sub-m'),auto_subs:checked('.sub-a'),
+    embed_subs:$('embedSubs').checked,compat:$('compat').checked,embed_meta:$('embedMeta').checked,chapters:$('chapters').checked,
+    sponsorblock:$('sponsor').checked,custom_format:$('custom').value.trim(),section:$('section').value.trim(),client:$('client').value,remote_ejs:$('remoteEjs').checked,rate:$('rate').value,extra:$('extra').value,
+    cookies:$('cookies').value,playlist:$('isPl').checked,playlist_folder:$('plFolder').checked,number_prefix:$('plNum').checked};
+  if(!o.custom_format)o.custom_format=exactFormat();
+  if(u.length===1&&info&&!info.playlist&&info.title&&info._url===u[0]){o.title=info.title;o.vid=info.id;o.duration=info.duration}
+  if(u.length===1&&info&&info.playlist&&$('isPl').checked){
+    const sel=checked('.pli'); if(!sel.length){alert('Kothao kono video select kora nai');return}
+    if(sel.length<info.playlist.count)o.playlist_items=toRanges(sel);
+  }
+  if(lastEst>0){
+    try{const dk=await api('/api/disk',{dir:o.dir});
+      if(dk.free&&dk.free<lastEst*2.1&&!confirm(`⚠ Disk e free jayga ${fmtSize(dk.free)}, kintu merge/embed shoho ~${fmtSize(lastEst*2.1)} lagte pare (file size ${fmtSize(lastEst)}). Jayga kom hole file corrupt hoy. Tobuo download korbe?`))return;
+    }catch(e){}
+  }
+  const r=await api('/api/download',{urls:u,options:o});
+  if(r.error){alert(r.error);return}
+  $('dlHint').textContent=`✅ ${r.ids.length}ta job queue te add hoyeche`; setTimeout(()=>$('dlHint').textContent='',4000);
+  loadJobs();
+}
+
+async function loadJobs(){
+  const js=await api('/api/jobs'); lastJobs=js;
+  if(!js.length){$('jobs').innerHTML='<span class="sub">Kono download nai</span>';return}
+  $('jobs').innerHTML=js.slice().reverse().map(j=>{
+    const info=[j.attempt,j.stage,j.percent?j.percent.toFixed(1)+'%':'',j.speed,j.eta?'ETA '+j.eta:'',j.item?'item '+j.item:''].filter(Boolean).join(' · ');
+    const canCancel=j.status==='running'||j.status==='queued';
+    return `<div class="job ${j.status}"><div class="row" style="justify-content:space-between;flex-wrap:nowrap">
+      <div class="t">${esc(j.title)}<span class="badge ${j.status}">${j.status}</span></div>
+      <div class="row" style="flex:none"><button onclick="toggleLog('${j.id}')">Log</button>${canCancel?`<button onclick="cancelJob('${j.id}')">Cancel</button>`:`<button onclick="retryJob('${j.id}')" title="Ager part file theke resume">↻ Retry</button>${(j.status!=='done'||j.warn)?`<button onclick="cleanRetry('${j.id}')" title="Ei video r sob adha/vanga file muche notun kore">🧹 Clean & retry</button>`:''}`}</div></div>
+      <div class="bar"><div style="width:${j.percent}%"></div></div>
+      <div class="sub">${esc(info)}</div>
+      ${j.outfile?`<div class="sub">📄 ${esc(j.outfile)}</div>`:''}
+      ${j.warn?`<div class="msg warn">⚠ ${esc(j.warn)}</div>`:''}
+      ${j.error&&j.status==='error'?`<div class="msg err">${esc(j.error)}${j.error.length<14?' — Log button chepe poriskar karon dekhun':''}</div>`:''}
+      ${openLogs.has(j.id)?`<pre>${esc(j.log.join('\n'))}</pre>`:''}</div>`}).join('');
+}
+function toggleLog(id){openLogs.has(id)?openLogs.delete(id):openLogs.add(id);loadJobs()}
+async function cancelJob(id){
+  const j=lastJobs.find(x=>x.id===id);
+  if(j&&j.status==='running'&&j.stage&&j.stage!=='Downloading'&&!confirm('⚠ Ekhon merge/embed cholche. Ekhon cancel korle main file corrupt hote pare (ar pore Retry korleo ager vanga file theke jete pare). Tobuo cancel?'))return;
+  await api('/api/cancel',{id});loadJobs()}
+async function cleanRetry(id){
+  if(!confirm('Ei video r (naam e [video-id] thaka) sob file - adha download, temp, vanga video, thumbnail, subs - muche notun kore shuru korbe. Thik ache?'))return;
+  const r=await api('/api/clean_retry',{id}); if(r.error)alert(r.error); loadJobs()}
+async function retryJob(id){await api('/api/retry',{id});loadJobs()}
+async function clearDone(){await api('/api/clear',{});loadJobs()}
+async function openFolder(){await api('/api/open',{dir:$('dir').value})}
+async function updateYt(nightly){
+  $('updBtn').disabled=true;$('updBtn').textContent='Updating…';
+  const r=await api('/api/update',{nightly});
+  $('updBtn').disabled=false;$('updBtn').textContent='Update yt-dlp';
+  alert(r.error||r.output||'Done');location.reload();
+}
+</script>
+</body>
+</html>
