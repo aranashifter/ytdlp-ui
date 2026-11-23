@@ -57,6 +57,10 @@ tr:hover td{background:#222733}
 .msg.warn{background:#3a2f12;color:#ffd98a}
 .foot{text-align:center;color:var(--mut);font-size:12px;padding:18px 0 4px;border-top:1px solid var(--bd);margin-top:6px;line-height:1.8}
 .foot a{color:var(--ac2);text-decoration:none}.foot a:hover{text-decoration:underline}
+input[type=range]{width:100%;accent-color:var(--ac2);margin:2px 0}
+.bar.ind>div{width:35%!important;animation:slide 1.2s infinite ease-in-out}
+@keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+.trim{margin-top:14px;background:var(--card2);border:1px solid var(--bd);border-radius:10px;padding:12px}
 </style>
 </head>
 <body>
@@ -101,6 +105,23 @@ tr:hover td{background:#222733}
     <label class="field aud hide" style="display:block"><span>Audio format</span><select id="afmt"><option>mp3</option><option>m4a</option><option>opus</option><option>flac</option><option>wav</option><option>best</option></select></label>
     <label class="field" style="display:block"><span>Thumbnail</span><select id="thumbOpt"><option value="none">Don't download</option><option value="embed">Embed in file</option><option value="file">Save as image file</option><option value="both">Embed + save image</option></select></label>
     <label class="field" style="display:block"><span>Save to folder</span><input type="text" id="dir"></label>
+  </div>
+
+  <div class="trim">
+    <label><input type="checkbox" id="trimOn"> ✂ <b>Trim:</b> puro video na, shudhu ekta ongsho download koro (boro video / live stream er jonno dorkari)</label>
+    <div id="trimBody" class="hide" style="margin-top:10px">
+      <div class="grid">
+        <label class="field" style="display:block"><span>Start (hh:mm:ss, mm:ss ba second)</span><input type="text" id="trimStart" value="00:00:00"></label>
+        <label class="field" style="display:block"><span>End (khali = shesh porjonto)</span><input type="text" id="trimEnd" placeholder="00:10:00"></label>
+        <div class="field"><span>Clip er dhoirgho</span><div id="trimLen" style="padding:8px 0;font-weight:600">-</div></div>
+      </div>
+      <div id="trimSliders" class="hide" style="margin-top:8px">
+        <div class="sub">Start</div><input type="range" id="sS" min="0" max="100" value="0">
+        <div class="sub">End</div><input type="range" id="sE" min="0" max="100" value="100">
+      </div>
+      <div class="row" style="margin-top:8px;gap:18px"><label><input type="checkbox" id="trimPrecise"> Precise cut (frame-accurate, ektu dheemi, re-encode hoy)</label><span id="trimLinks" class="sub"></span></div>
+      <div class="sub" style="margin-top:6px">Normal cut onek druto kintu start/end 1-5 second ounch-nich hote pare. ⚠ Subtitle puro video r timing e thake, tai trim kora clip e mile nao jete pare (subtitle dorkar na hole tick uthiye dao).</div>
+    </div>
   </div>
 
   <div id="estimate" class="msg info hide" style="margin-top:12px"></div>
@@ -220,9 +241,38 @@ function renderInfo(){
     : '<span class="sub">Ei video te ekta-i audio track (default use hobe)</span>';
   $('subList').innerHTML=(info.subs&&info.subs.length)?info.subs.map(s=>`<label><input type="checkbox" class="sub-m" value="${esc(s.code)}"> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):'<span class="sub">Manual subtitle nai</span>';
   $('autoList').innerHTML=(info.auto_subs&&info.auto_subs.length)?info.auto_subs.map(s=>`<label data-s="${esc((s.code+' '+s.name).toLowerCase())}"><input type="checkbox" class="sub-a" value="${esc(s.code)}"> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):'<span class="sub">Auto subtitle nai</span>';
+  trimInit();
   estimate();
 }
 $('autoFilter').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#autoList label').forEach(l=>l.classList.toggle('hide',!l.dataset.s.includes(q)))};
+function parseT(s){s=(s||'').trim();if(!s)return null;const p=s.split(':');if(p.length>3||p.some(x=>!/^\d+(\.\d+)?$/.test(x)))return NaN;return p.reduce((a,x)=>a*60+ +x,0)}
+function fmtT(n){n=Math.round(n);const h=Math.floor(n/3600),m=Math.floor(n%3600/60),x=n%60;return [h,m,x].map(v=>String(v).padStart(2,'0')).join(':')}
+function trimState(){
+  if(!$('trimOn').checked)return {on:false};
+  const dur=info&&info.duration?info.duration:null;
+  const s0=parseT($('trimStart').value), e=parseT($('trimEnd').value), s=s0===null?0:s0;
+  const end=(e===null)?dur:e;
+  return {on:true,start:s,e:e,end:end,dur:dur,len:(end!=null&&!isNaN(s)&&!isNaN(end))?end-s:NaN,bad:isNaN(s)||isNaN(e)};
+}
+function trimInit(){
+  const d=info&&info.duration?Math.ceil(info.duration):0;
+  $('trimStart').value='00:00:00';$('trimEnd').value='';
+  if(d){$('trimSliders').classList.remove('hide');$('sS').max=$('sE').max=d;$('sS').value=0;$('sE').value=d}else $('trimSliders').classList.add('hide');
+  trimUpd();
+}
+function trimUpd(){
+  const t=trimState(); if(!t.on)return;
+  $('trimLen').textContent=isNaN(t.len)||t.len<=0?'-':fmtT(t.len)+(t.dur?` (${Math.round(t.len/t.dur*100)}% of video)`:'');
+  const yt=info&&info.id&&/youtu/.test(info._url||'');
+  $('trimLinks').innerHTML=yt&&!isNaN(t.start)?`<a href="https://www.youtube.com/watch?v=${esc(info.id)}&t=${Math.floor(t.start)}s" target="_blank" rel="noopener" style="color:var(--ac2)">▶ Start e YouTube e dekho</a>`+(t.end&&!isNaN(t.end)?` · <a href="https://www.youtube.com/watch?v=${esc(info.id)}&t=${Math.floor(t.end)}s" target="_blank" rel="noopener" style="color:var(--ac2)">▶ End e dekho</a>`:''):'';
+  estimate();
+}
+$('trimOn').onchange=()=>{$('trimBody').classList.toggle('hide',!$('trimOn').checked);trimUpd();estimate()};
+$('trimPrecise').onchange=trimUpd;
+$('sS').oninput=()=>{if(+$('sS').value>=+$('sE').value)$('sS').value=Math.max(0,+$('sE').value-1);$('trimStart').value=fmtT($('sS').value);trimUpd()};
+$('sE').oninput=()=>{if(+$('sE').value<=+$('sS').value)$('sE').value=Math.min(+$('sE').max,+$('sS').value+1);$('trimEnd').value=+$('sE').value>=+$('sE').max?'':fmtT($('sE').value);trimUpd()};
+$('trimStart').oninput=()=>{const v=parseT($('trimStart').value);if(v!=null&&!isNaN(v))$('sS').value=Math.min(v,+$('sS').max);trimUpd()};
+$('trimEnd').oninput=()=>{const v=parseT($('trimEnd').value);$('sE').value=(v==null)?$('sE').max:(isNaN(v)?$('sE').value:Math.min(v,+$('sE').max));trimUpd()};
 const fmtSize=b=>b?(b>=1073741824?(b/1073741824).toFixed(2)+' GiB':(b/1048576).toFixed(1)+' MiB'):'';
 const isHls=f=>/m3u8/.test(f.proto||'');
 const codecName=c=>({avc1:'H.264',vp09:'VP9',vp9:'VP9',av01:'AV1',hev1:'HEVC',hvc1:'HEVC'}[c]||c);
@@ -288,6 +338,8 @@ function estimate(){
     let a=audioRows(); if(!a.length){const b=bestAudio(null);a=b?[b]:[]}
     a.forEach(f=>{parts.push(`audio${f.lang?' ['+f.lang+']':''} ${f.ac} ${kb(f)} = ${fmtSize(f.size)||'?'}`);if(f.size)total+=f.size;else unknown=true});
   }
+  const ts=trimState();
+  if(ts.on&&ts.len>0&&info.duration){const f=Math.min(1,ts.len/info.duration);total=total*f;parts.push(`trim ${fmtT(ts.len)} (~${Math.round(f*100)}% of video)`)}
   lastEst=total; box.classList.remove('hide');
   box.innerHTML=total?`📦 <b>Estimated size: ~${fmtSize(total)}</b>${unknown?' (kichu part er size jana nai)':''} <span class="sub">— ${esc(parts.join(' + '))}${info.playlist?' · protita video er jonno proyojon onujayi alada':''}</span>`:'📦 Size jana jachhe na (ei video r format e size dey nai)';
   if(total>5*1073741824){box.innerHTML+=`<div style="margin-top:8px;color:#ffd98a">⚠ <b>Boro file.</b> Protita embed step (merge, subs, thumbnail, metadata) e puro ${fmtSize(total)} file abar copy hoy, tai ghonta ghonta lage ar ~${fmtSize(total*2.1)} free disk lage. Cancel korle file corrupt hoy. Poramorsho: kom quality (720p) / ekta ongsho (Advanced) / fast settings. <button class="blue" style="padding:3px 10px;margin-left:6px" onclick="applyFast()">⚡ Fast settings apply</button></div>`}
@@ -315,8 +367,15 @@ async function startDownload(){
     embed_subs:$('embedSubs').checked,compat:$('compat').checked,embed_meta:$('embedMeta').checked,chapters:$('chapters').checked,
     sponsorblock:$('sponsor').checked,custom_format:$('custom').value.trim(),section:$('section').value.trim(),client:$('client').value,remote_ejs:$('remoteEjs').checked,rate:$('rate').value,extra:$('extra').value,
     cookies:$('cookies').value,playlist:$('isPl').checked,playlist_folder:$('plFolder').checked,number_prefix:$('plNum').checked};
+  const ts=trimState();
+  if(ts.on){
+    if(ts.bad){alert('Trim er somoy format thik noy. Ekhane likhun: 00:10:00 ba 10:00 ba second');return}
+    if(ts.end!=null&&ts.end<=ts.start){alert('End somoy Start er cheye boro hote hobe');return}
+    if(ts.dur&&ts.start>=ts.dur){alert('Start somoy video r dhoirgho er cheye boro');return}
+    o.section=fmtT(ts.start)+'-'+(ts.e===null?'inf':fmtT(ts.e));o.trim_precise=$('trimPrecise').checked;
+  }
   if(!o.custom_format)o.custom_format=exactFormat();
-  if(u.length===1&&info&&!info.playlist&&info.title&&info._url===u[0]){o.title=info.title;o.vid=info.id;o.duration=info.duration}
+  if(u.length===1&&info&&!info.playlist&&info.title&&info._url===u[0]){o.title=info.title+(o.section?' ✂ '+o.section:'');o.vid=info.id;o.duration=info.duration}
   if(u.length===1&&info&&info.playlist&&$('isPl').checked){
     const sel=checked('.pli'); if(!sel.length){alert('Kothao kono video select kora nai');return}
     if(sel.length<info.playlist.count)o.playlist_items=toRanges(sel);
@@ -341,7 +400,7 @@ async function loadJobs(){
     return `<div class="job ${j.status}"><div class="row" style="justify-content:space-between;flex-wrap:nowrap">
       <div class="t">${esc(j.title)}<span class="badge ${j.status}">${j.status}</span></div>
       <div class="row" style="flex:none"><button onclick="toggleLog('${j.id}')">Log</button>${canCancel?`<button onclick="cancelJob('${j.id}')">Cancel</button>`:`<button onclick="retryJob('${j.id}')" title="Ager part file theke resume">↻ Retry</button>${(j.status!=='done'||j.warn)?`<button onclick="cleanRetry('${j.id}')" title="Ei video r sob adha/vanga file muche notun kore">🧹 Clean & retry</button>`:''}`}</div></div>
-      <div class="bar"><div style="width:${j.percent}%"></div></div>
+      <div class="bar ${j.busy?'ind':''}"><div style="width:${j.percent}%"></div></div>
       <div class="sub">${esc(info)}</div>
       ${j.outfile?`<div class="sub">📄 ${esc(j.outfile)}</div>`:''}
       ${j.warn?`<div class="msg warn">⚠ ${esc(j.warn)}</div>`:''}

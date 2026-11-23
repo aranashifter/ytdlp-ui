@@ -260,8 +260,14 @@ def build_cmd(url, o, pre=None):
     if o.get("rate"):
         a += ["-r", str(o["rate"])]
     sec = (o.get("section") or "").strip()
-    if sec and re.fullmatch(r"[\d:.]+-([\d:.]+|inf)", sec):
+    if not re.fullmatch(r"[\d:.]+-([\d:.]+|inf)", sec):
+        sec = ""
+    suffix = ""
+    if sec:
         a += ["--download-sections", "*" + sec]
+        if o.get("trim_precise"):
+            a.append("--force-keyframes-at-cuts")
+        suffix = " [trim %s]" % sec.replace(":", ".")
 
     # output
     out_dir = os.path.abspath(os.path.expanduser(o.get("dir") or DEFAULT_DIR))
@@ -272,10 +278,10 @@ def build_cmd(url, o, pre=None):
             a += ["--playlist-items", str(o["playlist_items"])]
         prefix = "%(playlist_index)03d - " if o.get("number_prefix", True) else ""
         folder = "%(playlist_title).100s/" if o.get("playlist_folder", True) else ""
-        tmpl = folder + prefix + "%(title).150s [%(id)s].%(ext)s"
+        tmpl = folder + prefix + "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
     else:
         a.append("--no-playlist")
-        tmpl = "%(title).150s [%(id)s].%(ext)s"
+        tmpl = "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
     a += ["-P", out_dir, "-o", tmpl]
 
     if o.get("extra"):
@@ -321,7 +327,7 @@ class Job:
     def public(self):
         return {"id": self.id, "url": self.url, "title": self.title, "status": self.status,
                 "percent": self.percent, "speed": self.speed, "eta": self.eta, "item": self.item,
-                "stage": self.stage, "attempt": self.attempt, "warn": self.warn, "outfile": self.outfile, "error": self.error, "dir": self.dir, "log": self.log[-60:]}
+                "stage": self.stage, "attempt": self.attempt, "busy": bool(self.opts.get("section")) and self.status == "running" and self.percent == 0, "warn": self.warn, "outfile": self.outfile, "error": self.error, "dir": self.dir, "log": self.log[-60:]}
 
 
 def kill_tree(proc):
@@ -379,6 +385,11 @@ def run_once(job, cmd):
             job.stage = "Downloading"
             if job.percent < 100:
                 continue
+        m = re.search(r"\[download\]\s+([\d.]+\s?\w?i?B)\s+at\s+(.+?)(?:\s+\(|$)", line)
+        if m and "%" not in line:
+            job.stage = "Downloading · " + m.group(1)
+            job.speed = m.group(2)
+            continue
         m = re.search(r"Downloading item (\d+) of (\d+)", line)
         if m:
             job.item = "%s/%s" % m.groups()
@@ -455,6 +466,13 @@ def ffprobe_duration(path):
         return None
 
 
+def parse_ts(x):
+    v = 0.0
+    for part in x.split(":"):
+        v = v * 60 + float(part)
+    return v
+
+
 def finalize(job):
     """After a 'successful' run: make sure the main file really exists and is complete."""
     o = job.opts
@@ -469,9 +487,19 @@ def finalize(job):
         job.outfile = "%s (%s)" % (os.path.basename(main), human(os.path.getsize(main)))
         dur = ffprobe_duration(main)
         exp = o.get("duration")
+        tol = 0.97
+        sec = (o.get("section") or "").strip()
+        if sec and exp:
+            try:
+                a_, b_ = sec.split("-", 1)
+                st = parse_ts(a_)
+                en = float(exp) if b_ == "inf" else min(parse_ts(b_), float(exp))
+                exp, tol = max(en - st, 0), 0.85  # keyframe cut e kichu second ounch-nich hoy
+            except Exception:
+                exp = None
         if dur is None:
             warns.append("Main file play-yogyo noy (corrupt/incomplete). 'Clean & retry' chapun.")
-        elif dur != "n/a" and exp and not o.get("section") and dur < float(exp) * 0.97:
+        elif dur != "n/a" and exp and dur < float(exp) * tol:
             warns.append("File incomplete: duration %s, kintu video %s. 'Clean & retry' chapun." % (hms(dur), hms(exp)))
     else:
         warns.append("Main video file paoa jay nai (merge hoyni). 'Clean & retry' chapun.")
