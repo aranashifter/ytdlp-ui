@@ -1,197 +1,472 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>yt-dlp Downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>(function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t;if(localStorage.getItem('lang')==='bn')document.documentElement.lang='bn'}catch(e){}})()</script>
 <style>
-:root{--bg:#0f1115;--card:#181b22;--card2:#1f232c;--bd:#2a2f3a;--tx:#e6e8ee;--mut:#8b93a5;--ac:#ff4d4d;--ac2:#3b82f6;--ok:#22c55e;--warn:#f59e0b}
+:root{--font:"Inter","Noto Sans Bengali","Segoe UI Variable Text","Segoe UI","Nirmala UI",system-ui,-apple-system,sans-serif;--mono:ui-monospace,"Cascadia Code",Consolas,monospace}
+html[lang=bn]{--font:"Noto Sans Bengali","Nirmala UI","Inter","Segoe UI",system-ui,sans-serif}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0a0c11;--sf:#131720;--sf2:#1a1f2a;--sf3:#232938;--bd:#252b38;--bd2:#343c52;--tx:#eceef4;--mut:#8f98ad;--ac:#6d7cff;--ac2:#9a6dff;--acs:rgba(109,124,255,.15);--ok:#34d399;--oks:rgba(52,211,153,.13);--wn:#fbbf24;--wns:rgba(251,191,36,.11);--er:#f87171;--ers:rgba(248,113,113,.12);--sh:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.25)}
+:root[data-theme=light]{color-scheme:light;--bg:#f3f4f9;--sf:#fff;--sf2:#f6f7fb;--sf3:#eceff6;--bd:#e3e6ef;--bd2:#ccd2e2;--tx:#141927;--mut:#667089;--ac:#4f5bd5;--ac2:#7a4fd5;--acs:rgba(79,91,213,.10);--ok:#0f9d6b;--oks:rgba(15,157,107,.10);--wn:#a96b0b;--wns:rgba(217,160,30,.14);--er:#c93a3d;--ers:rgba(212,71,74,.09);--sh:0 1px 2px rgba(20,25,39,.05),0 10px 30px rgba(20,25,39,.06)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
-.wrap{max-width:1050px;margin:0 auto;padding:18px}
-h1{font-size:20px;margin:0}
-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.sub{color:var(--mut);font-size:12px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
-.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px}
-textarea,input[type=text],select{width:100%;background:var(--card2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font:inherit}
-textarea{min-height:70px;resize:vertical}
-label{display:flex;align-items:center;gap:6px;cursor:pointer}
-button{background:var(--card2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
-button:hover{border-color:var(--mut)}
-button.pri{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
-button.blue{background:var(--ac2);border-color:var(--ac2);color:#fff}
-button:disabled{opacity:.5;cursor:not-allowed}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.field>span{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
-.list{max-height:200px;overflow:auto;background:var(--card2);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
-.list label{padding:2px 0;font-size:13px}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+html[lang=bn] body{line-height:1.7}
 .hide{display:none!important}
-.msg{padding:8px 10px;border-radius:8px;margin-top:10px;font-size:13px}
-.msg.err{background:#3a1d1d;color:#ffb4b4}
-.msg.info{background:#1d2a3a;color:#b4d4ff}
-.meta{display:flex;gap:12px;align-items:flex-start}
-.meta img{width:160px;border-radius:8px;flex:none}
-.pl-item{display:flex;gap:6px;align-items:center}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}
+code{font-family:var(--mono);background:var(--sf3);padding:1px 6px;border-radius:6px;font-size:12.5px}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
+.top-in{max-width:1260px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:grid;place-items:center;color:#fff;box-shadow:0 8px 20px rgba(109,124,255,.35)}
+.logo svg.i{width:20px;height:20px}
+.name{font-weight:700;font-size:16.5px;letter-spacing:-.01em;line-height:1.2}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mut);background:var(--sf);border:1px solid var(--bd);border-radius:99px;padding:1px 9px}
+.chip i{width:6px;height:6px;border-radius:50%;background:var(--ok)}.chip.bad i{background:var(--er)}
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* controls */
+input[type=text],select,textarea{width:100%;background:var(--sf2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;font:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+::placeholder{color:var(--mut);opacity:.75}
+select{appearance:none;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238f98ad' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+textarea{min-height:92px;resize:vertical;line-height:1.5}
+input[type=checkbox],input[type=radio]{accent-color:var(--ac)}
+input[type=range]{width:100%;accent-color:var(--ac);margin:2px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 14px;font:inherit;font-weight:550;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--bd2);background:var(--sf2)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.sm{padding:4px 10px;font-size:12.5px;border-radius:8px}
+.btn.pri{background:linear-gradient(135deg,var(--ac),var(--ac2));border-color:transparent;color:#fff;box-shadow:0 6px 18px rgba(109,124,255,.3)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.lg{padding:11px 22px;font-size:15px;border-radius:12px}
+.btn.ib{padding:8px;width:38px}
+.seg{display:inline-flex;background:var(--sf2);border:1px solid var(--bd);border-radius:11px;padding:3px;gap:2px}
+.seg label,.seg button{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:550;color:var(--mut);border:0;background:transparent;transition:.15s}
+.seg label input{display:none}
+.seg label:has(input:checked),.seg button.on{background:var(--sf);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.seg.sm label,.seg.sm button{padding:4px 11px;font-size:12.5px}
+.field label.l,.field>.l{display:block;font-size:12px;color:var(--mut);margin-bottom:5px;font-weight:550}
+.sw{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--sf2);position:relative;transition:.15s}
+.sw:hover{border-color:var(--bd2)}
+.sw input{position:absolute;opacity:0;pointer-events:none}
+.sw .tr{width:34px;height:20px;border-radius:99px;background:var(--sf3);border:1px solid var(--bd2);position:relative;flex:none;transition:.15s}
+.sw .tr::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--mut);transition:.15s}
+.sw input:checked+.tr{background:var(--ac);border-color:var(--ac)}
+.sw input:checked+.tr::after{left:16px;background:#fff}
+.sw input:focus-visible+.tr{box-shadow:0 0 0 3px var(--acs)}
+.sw .tx{font-size:13px;line-height:1.35}
+
+/* layout */
+.wrap{max-width:1260px;margin:0 auto;padding:22px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:22px;align-items:start}
+.side{position:sticky;top:80px;max-height:calc(100vh - 100px);display:flex;flex-direction:column}
+@media(max-width:1060px){.layout{grid-template-columns:1fr}.side{position:static;max-height:none}}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:var(--sh)}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card-h h2{margin:0;font-size:15px;font-weight:650;letter-spacing:-.005em;flex:1}
+.step{width:24px;height:24px;border-radius:8px;background:var(--acs);color:var(--ac);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.sec{margin-top:18px;padding-top:16px;border-top:1px solid var(--bd)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sub{color:var(--mut);font-size:12.5px}
+.msg{padding:10px 12px;border-radius:10px;margin-top:12px;font-size:13px;line-height:1.5}
+.msg.err{background:var(--ers);color:var(--er);border:1px solid color-mix(in srgb,var(--er) 25%,transparent)}
+.msg.info{background:var(--acs);color:var(--ac)}
+.msg.warn{background:var(--wns);color:var(--wn);border:1px solid color-mix(in srgb,var(--wn) 25%,transparent)}
+.msg b{font-weight:650}
+.lg-icon{display:flex;gap:10px;align-items:flex-start}.lg-icon svg.i{margin-top:3px}
+
+/* url */
+.urlbox{position:relative}
+.urlbox textarea{padding:14px 16px;font-size:14.5px;min-height:96px}
+
+/* info */
+.meta{display:flex;gap:16px;align-items:flex-start}
+.meta img{width:178px;aspect-ratio:16/9;object-fit:cover;border-radius:12px;flex:none;background:var(--sf3)}
+.vt{font-weight:650;font-size:16px;line-height:1.35;margin-bottom:6px}
+.pl-item{display:flex;gap:8px;align-items:center;padding:3px 0;font-size:13px}
 .pl-item small{color:var(--mut)}
-.job{background:var(--card2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px}
-.job .t{font-weight:600;word-break:break-word}
-.bar{height:8px;background:#2b303b;border-radius:99px;overflow:hidden;margin:8px 0 4px}
-.bar>div{height:100%;background:var(--ac2);transition:width .3s}
-.job.done .bar>div{background:var(--ok)}.job.error .bar>div{background:var(--ac)}
-.badge{font-size:11px;padding:2px 8px;border-radius:99px;background:#2b303b;color:var(--mut);margin-left:6px}
-.badge.running{background:#1d3a5c;color:#9cc7ff}.badge.done{background:#17361f;color:#8be0a4}.badge.error{background:#3a1d1d;color:#ffb4b4}
-pre{background:#0b0d11;border-radius:8px;padding:8px;max-height:220px;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-all;margin:6px 0 0}
-details summary{cursor:pointer;color:var(--mut)}
-.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
-.seg label{padding:7px 14px;background:var(--card2)}
-.seg input{display:none}
-.seg label:has(input:checked){background:var(--ac2);color:#fff}
-.tblwrap{max-height:260px;overflow:auto;margin-top:8px;border:1px solid var(--bd);border-radius:8px}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th,td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}
-th{position:sticky;top:0;background:var(--card2);color:var(--mut)}
-tr:hover td{background:#222733}
-.tag{font-size:10px;background:#2b303b;border-radius:4px;padding:1px 5px;color:var(--mut)}
-.msg.warn{background:#3a2f12;color:#ffd98a}
-.foot{text-align:center;color:var(--mut);font-size:12px;padding:18px 0 4px;border-top:1px solid var(--bd);margin-top:6px;line-height:1.8}
-.foot a{color:var(--ac2);text-decoration:none}.foot a:hover{text-decoration:underline}
-input[type=range]{width:100%;accent-color:var(--ac2);margin:2px 0}
+
+/* lists + tables */
+.list{max-height:210px;overflow:auto;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:6px 10px}
+.list label{display:flex;gap:8px;align-items:center;padding:3px 0;font-size:13px;cursor:pointer}
+.tblwrap{max-height:270px;overflow:auto;margin-top:10px;border:1px solid var(--bd);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{position:sticky;top:0;background:var(--sf2);color:var(--mut);font-weight:600;z-index:1}
+tbody tr:hover td{background:var(--sf2)}
+tr:last-child td{border-bottom:0}
+.tag{font-size:10.5px;background:var(--sf3);border-radius:5px;padding:1px 6px;color:var(--mut)}
+.sec-t{display:flex;align-items:center;gap:8px;font-weight:650;font-size:13.5px;margin-bottom:6px}
+details>summary{cursor:pointer;color:var(--tx);font-weight:600;padding:2px 0;list-style:none;display:flex;align-items:center;gap:8px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(-45deg);transition:.15s;margin-right:4px}
+details[open]>summary::before{transform:rotate(45deg)}
+.toggles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.trim{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.est{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--acs);border:1px solid color-mix(in srgb,var(--ac) 22%,transparent)}
+.est-main{display:flex;gap:10px;align-items:flex-start}.est-main svg.i{margin-top:3px;color:var(--ac)}
+.est-warn{display:flex;gap:10px;align-items:flex-start;color:var(--wn);font-size:13px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--wn) 35%,transparent)}
+.est-warn svg.i{margin-top:3px}
+
+/* download bar */
+.dlbar{position:sticky;bottom:14px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--sf) 92%,transparent);backdrop-filter:blur(10px);border:1px solid var(--bd2);box-shadow:var(--sh);margin-bottom:18px}
+
+/* jobs */
+.jobs{overflow:auto;display:flex;flex-direction:column;gap:10px}
+.job{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.job .t{font-weight:600;line-height:1.35;word-break:break-word;margin-bottom:8px}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 9px;border-radius:99px;background:var(--sf3);color:var(--mut);margin-left:8px;vertical-align:1px}
+.badge.running{background:var(--acs);color:var(--ac)}.badge.done{background:var(--oks);color:var(--ok)}.badge.error{background:var(--ers);color:var(--er)}
+.bar{height:6px;background:var(--sf3);border-radius:99px;overflow:hidden;margin:8px 0 6px}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:99px;transition:width .35s}
+.job.done .bar>div{background:var(--ok)}.job.error .bar>div{background:var(--er)}.job.cancelled .bar>div{background:var(--mut)}
 .bar.ind>div{width:35%!important;animation:slide 1.2s infinite ease-in-out}
 @keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
-.trim{margin-top:14px;background:var(--card2);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.jb{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:230px;overflow:auto;font:12px/1.5 var(--mono);white-space:pre-wrap;word-break:break-all;margin:8px 0 0}
+.empty{display:grid;place-items:center;padding:28px 10px;color:var(--mut);text-align:center;gap:8px}
+.empty svg.i{width:30px;height:30px;opacity:.5}
+
+.foot{text-align:center;color:var(--mut);font-size:12.5px;padding:18px 0 28px;line-height:1.9}
+.toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
+.toast{background:var(--sf);border:1px solid var(--bd2);border-left:4px solid var(--ac);border-radius:10px;padding:10px 14px;box-shadow:var(--sh);max-width:380px;font-size:13.5px;animation:pop .2s}
+.toast.err{border-left-color:var(--er)}.toast.ok{border-left-color:var(--ok)}
+@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@media(max-width:560px){.meta{flex-direction:column}.meta img{width:100%}.dlbar{flex-direction:column;align-items:stretch}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+<symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-term" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" x2="20" y1="21" y2="21"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="3" y2="3"/><circle cx="9" cy="21" r="0"/><rect x="7" y="19" width="4" height="4" rx="1"/><rect x="14" y="10" width="4" height="4" rx="1"/><rect x="7" y="1" width="4" height="4" rx="1"/></symbol>
+</defs></svg>
+
+<header class="top"><div class="top-in">
+  <div class="brand">
+    <div class="logo"><svg class="i"><use href="#i-download"/></svg></div>
+    <div><div class="name">yt-dlp Downloader</div><div class="chips" id="cfg"></div></div>
+  </div>
+  <div class="acts">
+    <div class="seg sm" id="langSeg" role="group" aria-label="Language">
+      <button data-lang="bn" onclick="setLang('bn')">বাংলা</button>
+      <button data-lang="en" onclick="setLang('en')">English</button>
+      <button data-lang="bl" onclick="setLang('bl')">Banglish</button>
+    </div>
+    <button class="btn ib" id="themeBtn" onclick="toggleTheme()" data-i18n-title="themeTip"><svg class="i"><use href="#i-sun"/></svg></button>
+    <button class="btn" onclick="openFolder()"><svg class="i"><use href="#i-folder"/></svg><span data-i18n="openFolder"></span></button>
+    <div class="row" style="gap:0">
+      <button class="btn" id="updBtn" onclick="updateYt(false)" style="border-radius:10px 0 0 10px"><svg class="i"><use href="#i-refresh"/></svg><span id="updLbl" data-i18n="updateYt"></span></button>
+      <button class="btn" onclick="updateYt(true)" style="border-radius:0 10px 10px 0;border-left:0" data-i18n="updateNightly" data-i18n-title="updateNightlyTip"></button>
+    </div>
+  </div>
+</div></header>
+
 <div class="wrap">
-<header>
-  <div><h1>⬇ yt-dlp Downloader</h1><div class="sub" id="cfg">loading…</div></div>
-  <div class="row"><button onclick="openFolder()">📂 Open folder</button><button onclick="updateYt(false)" id="updBtn">Update yt-dlp</button><button onclick="updateYt(true)" title="YouTube kaj na korle nightly try korun">Update (nightly)</button></div>
-</header>
+<div id="offline" class="msg err hide" style="margin:0 0 16px"></div>
 <div id="jsWarn"></div>
 
-<div class="card">
-  <h2>1 · Video / Playlist link</h2>
-  <textarea id="urls" placeholder="Link paste korun (ekadhik link hole protita alada line e)"></textarea>
-  <div class="row" style="margin-top:10px">
-    <label><input type="checkbox" id="isPl"> Playlist hishebe download</label>
-    <select id="cookies" style="width:auto" title="Age-restricted / private video er jonno browser cookies">
-      <option value="">Cookies: none</option><option>chrome</option><option>edge</option><option>firefox</option><option>brave</option><option>opera</option><option>vivaldi</option>
-    </select>
-    <button class="blue" id="fetchBtn" onclick="fetchInfo()">🔍 Fetch info (quality, audio, subs)</button>
-  </div>
-  <div id="infoMsg"></div>
-</div>
+<div class="layout">
+<main>
 
-<div class="card hide" id="infoCard">
-  <h2>Video info</h2>
-  <div class="meta"><img id="thumb" class="hide"><div><div id="vTitle" style="font-weight:600;font-size:16px"></div><div class="sub" id="vSub"></div></div></div>
-  <div id="plBox" class="hide" style="margin-top:12px">
-    <div class="row" style="justify-content:space-between"><b>Playlist items (<span id="plSel">0</span>/<span id="plCnt">0</span>)</b>
-      <span class="row"><button onclick="plAll(true)">All</button><button onclick="plAll(false)">None</button></span></div>
-    <div class="list" id="plList" style="max-height:260px;margin-top:6px"></div>
-  </div>
-</div>
-
-<div class="card">
-  <h2>2 · Options</h2>
-  <div class="row" style="margin-bottom:12px">
-    <div class="seg"><label><input type="radio" name="mode" value="video" checked> 🎬 Video</label><label><input type="radio" name="mode" value="audio"> 🎵 Audio only</label></div>
-  </div>
-  <div class="grid">
-    <label class="field vid" style="display:block"><span>Quality (size / bitrate soho)</span><select id="height"><option value="best">Best available</option></select></label>
-    <label class="field vid" style="display:block"><span>Container</span><select id="container"><option value="mp4">MP4</option><option value="mkv">MKV</option><option value="webm">WEBM</option></select></label>
-    <label class="field aud hide" style="display:block"><span>Audio format</span><select id="afmt"><option>mp3</option><option>m4a</option><option>opus</option><option>flac</option><option>wav</option><option>best</option></select></label>
-    <label class="field" style="display:block"><span>Thumbnail</span><select id="thumbOpt"><option value="none">Don't download</option><option value="embed">Embed in file</option><option value="file">Save as image file</option><option value="both">Embed + save image</option></select></label>
-    <label class="field" style="display:block"><span>Save to folder</span><input type="text" id="dir"></label>
-  </div>
-
-  <div class="trim">
-    <label><input type="checkbox" id="trimOn"> ✂ <b>Trim:</b> puro video na, shudhu ekta ongsho download koro (boro video / live stream er jonno dorkari)</label>
-    <div id="trimBody" class="hide" style="margin-top:10px">
-      <div class="grid">
-        <label class="field" style="display:block"><span>Start (hh:mm:ss, mm:ss ba second)</span><input type="text" id="trimStart" value="00:00:00"></label>
-        <label class="field" style="display:block"><span>End (khali = shesh porjonto)</span><input type="text" id="trimEnd" placeholder="00:10:00"></label>
-        <div class="field"><span>Clip er dhoirgho</span><div id="trimLen" style="padding:8px 0;font-weight:600">-</div></div>
+  <section class="card">
+    <div class="card-h"><span class="step">1</span><h2 data-i18n="s1"></h2></div>
+    <div class="urlbox"><textarea id="urls" data-i18n-ph="urlsPh" spellcheck="false"></textarea></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="row">
+        <label class="sw"><input type="checkbox" id="isPl"><span class="tr"></span><span class="tx" data-i18n="playlistMode"></span></label>
+        <select id="cookies" style="width:auto" data-i18n-title="cookiesTip">
+          <option value="" data-i18n="cookiesNone"></option><option>chrome</option><option>edge</option><option>firefox</option><option>brave</option><option>opera</option><option>vivaldi</option>
+        </select>
       </div>
-      <div id="trimSliders" class="hide" style="margin-top:8px">
-        <div class="sub">Start</div><input type="range" id="sS" min="0" max="100" value="0">
-        <div class="sub">End</div><input type="range" id="sE" min="0" max="100" value="100">
+      <button class="btn pri" id="fetchBtn" onclick="fetchInfo()" data-i18n-title="fetchTip"><svg class="i"><use href="#i-search"/></svg><span data-i18n="fetchBtn"></span></button>
+    </div>
+    <div id="infoMsg"></div>
+  </section>
+
+  <section class="card hide" id="infoCard">
+    <div class="meta"><img id="thumb" class="hide" alt=""><div style="min-width:0"><div class="vt" id="vTitle"></div><div class="sub" id="vSub"></div></div></div>
+    <div id="plBox" class="hide sec">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px"><b><span data-i18n="plItems"></span> (<span id="plSel">0</span>/<span id="plCnt">0</span>)</b>
+        <span class="row" style="gap:6px"><button class="btn sm" onclick="plAll(true)" data-i18n="all"></button><button class="btn sm" onclick="plAll(false)" data-i18n="noneBtn"></button></span></div>
+      <div class="list" id="plList" style="max-height:260px"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><span class="step">2</span><h2 data-i18n="s2"></h2>
+      <div class="seg"><label><input type="radio" name="mode" value="video" checked><svg class="i"><use href="#i-film"/></svg><span data-i18n="modeVideo"></span></label><label><input type="radio" name="mode" value="audio"><svg class="i"><use href="#i-music"/></svg><span data-i18n="modeAudio"></span></label></div>
+    </div>
+
+    <div class="grid">
+      <div class="field vid"><label class="l" for="height" data-i18n="quality"></label><select id="height"><option value="best"></option></select></div>
+      <div class="field vid"><label class="l" for="container" data-i18n="container"></label><select id="container"><option value="mp4">MP4</option><option value="mkv">MKV</option><option value="webm">WEBM</option></select></div>
+      <div class="field aud hide"><label class="l" for="afmt" data-i18n="audioFormat"></label><select id="afmt"><option>mp3</option><option>m4a</option><option>opus</option><option>flac</option><option>wav</option><option>best</option></select></div>
+      <div class="field"><label class="l" for="thumbOpt" data-i18n="thumbnail"></label><select id="thumbOpt"><option value="none" data-i18n="thumbNone"></option><option value="embed" data-i18n="thumbEmbed"></option><option value="file" data-i18n="thumbFile"></option><option value="both" data-i18n="thumbBoth"></option></select></div>
+      <div class="field"><label class="l" for="dir" data-i18n="saveTo"></label><input type="text" id="dir"></div>
+    </div>
+
+    <div class="sec">
+      <div class="trim">
+        <label class="sw" style="background:transparent;border:0;padding:0"><input type="checkbox" id="trimOn"><span class="tr"></span><span class="tx"><b class="row" style="display:inline-flex;gap:6px"><svg class="i"><use href="#i-scissors"/></svg><span data-i18n="trimT"></span></b> <span class="sub" data-i18n="trimSub"></span></span></label>
+        <div id="trimBody" class="hide" style="margin-top:14px">
+          <div class="grid3">
+            <div class="field"><label class="l" for="trimStart" data-i18n="trimStart"></label><input type="text" id="trimStart" value="00:00:00"></div>
+            <div class="field"><label class="l" for="trimEnd" data-i18n="trimEnd"></label><input type="text" id="trimEnd" placeholder="00:10:00"></div>
+            <div class="field"><span class="l" data-i18n="trimLen"></span><div id="trimLen" style="padding:8px 0;font-weight:650">-</div></div>
+          </div>
+          <div id="trimSliders" class="hide" style="margin-top:10px"><input type="range" id="sS" min="0" max="100" value="0"><input type="range" id="sE" min="0" max="100" value="100"></div>
+          <div class="row" style="margin-top:10px;gap:16px"><label class="row" style="gap:7px;cursor:pointer"><input type="checkbox" id="trimPrecise"><span data-i18n="trimPrecise"></span></label><span id="trimLinks" class="sub"></span></div>
+          <div class="sub" style="margin-top:8px" data-i18n="trimNote"></div>
+        </div>
       </div>
-      <div class="row" style="margin-top:8px;gap:18px"><label><input type="checkbox" id="trimPrecise"> Precise cut (frame-accurate, ektu dheemi, re-encode hoy)</label><span id="trimLinks" class="sub"></span></div>
-      <div class="sub" style="margin-top:6px">Normal cut onek druto kintu start/end 1-5 second ounch-nich hote pare. ⚠ Subtitle puro video r timing e thake, tai trim kora clip e mile nao jete pare (subtitle dorkar na hole tick uthiye dao).</div>
     </div>
-  </div>
 
-  <div id="estimate" class="msg info hide" style="margin-top:12px"></div>
+    <div id="estimate" class="est hide"></div>
 
-  <details id="fmtBox" class="hide" open style="margin-top:14px"><summary>📋 Sob available format (yt-dlp -F er moto): resolution, bitrate, size</summary>
-    <div class="row" style="margin-top:8px;gap:18px">
-      <label><input type="checkbox" id="showHls"> HLS (m3u8) format dekhao</label>
+    <details id="fmtBox" class="sec hide" open>
+      <summary data-i18n="fmtSum"></summary>
+      <div class="row" style="margin-top:10px"><label class="sw"><input type="checkbox" id="showHls"><span class="tr"></span><span class="tx" data-i18n="showHls"></span></label></div>
+      <div class="sub" style="margin-top:8px" data-i18n="fmtHint"></div>
+      <div class="tblwrap"><table><thead><tr><th></th><th>ID</th><th data-i18n="thRes"></th><th data-i18n="thFps"></th><th data-i18n="thCodec"></th><th data-i18n="thBit"></th><th data-i18n="thSize"></th><th data-i18n="thExt"></th><th data-i18n="thNotes"></th></tr></thead><tbody id="vTbl"></tbody></table></div>
+      <div class="tblwrap"><table><thead><tr><th></th><th>ID</th><th data-i18n="thLang"></th><th data-i18n="thCodec"></th><th data-i18n="thBit"></th><th data-i18n="thSize"></th><th data-i18n="thExt"></th></tr></thead><tbody id="aTbl"></tbody></table></div>
+    </details>
+
+    <div class="sec">
+      <div class="grid3">
+        <div class="field" id="audBox"><span class="l"><span data-i18n="audT"></span> <span style="font-weight:400" data-i18n="audHint"></span></span>
+          <div class="list" id="audList"><span class="sub" data-i18n="audPh"></span></div></div>
+        <div class="field"><span class="l" data-i18n="subM"></span><div class="list" id="subList"><span class="sub" data-i18n="subPh"></span></div></div>
+        <div class="field"><span class="l" data-i18n="subA"></span>
+          <input type="text" id="autoFilter" data-i18n-ph="searchLang" style="margin-bottom:6px;padding:6px 10px">
+          <div class="list" id="autoList" style="max-height:170px"><span class="sub" data-i18n="subPh"></span></div></div>
+      </div>
     </div>
-    <div class="sub" style="margin-top:6px">Video: ekta row te radio chapo (upore Quality dropdown o sathe sathe change hobe). Audio: ek ba ekadhik tick koro (ekadhik hole MKV te merge hobe). Audio na tick korle nicher "Audio language" ba best audio use hobe.</div>
-    <div class="tblwrap"><table id="vTbl"></table></div>
-    <div class="tblwrap"><table id="aTbl"></table></div>
-  </details>
 
-  <div class="grid" style="margin-top:14px">
-    <div class="field" id="audBox"><span>Audio language / track (ekadhik select korle sob ekshathe merge hobe, MKV hoy)</span>
-      <div class="list" id="audList"><span class="sub">Fetch info korle audio track dekhabe</span></div></div>
-    <div class="field"><span>Subtitles (manual)</span><div class="list" id="subList"><span class="sub">Fetch info korle dekhabe</span></div></div>
-    <div class="field"><span>Subtitles (auto-generated / auto-translated)</span>
-      <input type="text" id="autoFilter" placeholder="Search language…" style="margin-bottom:4px;padding:5px 8px">
-      <div class="list" id="autoList"><span class="sub">Fetch info korle dekhabe</span></div></div>
-  </div>
-
-  <div class="row" style="margin-top:14px;gap:18px">
-    <label class="vid"><input type="checkbox" id="embedSubs" checked> Subtitle video te embed koro</label>
-    <label class="vid"><input type="checkbox" id="compat" checked> H.264/AAC prefer (sob device e chole)</label>
-    <label><input type="checkbox" id="embedMeta" checked> Metadata embed</label>
-    <label class="vid"><input type="checkbox" id="chapters"> Chapters embed</label>
-    <label><input type="checkbox" id="sponsor"> SponsorBlock: sponsor part remove</label>
-  </div>
-  <div class="row plopt hide" style="margin-top:10px;gap:18px">
-    <label><input type="checkbox" id="plFolder" checked> Playlist er alada folder</label>
-    <label><input type="checkbox" id="plNum" checked> File name e 001, 002… number</label>
-  </div>
-
-  <details style="margin-top:14px"><summary>Advanced</summary>
-    <div class="grid" style="margin-top:8px">
-      <label class="field" style="display:block"><span>Custom format (-f), e.g. 137+140</span><input type="text" id="custom"></label>
-      <label class="field" style="display:block"><span>Speed limit (e.g. 2M, 500K)</span><input type="text" id="rate"></label>
-      <label class="field" style="display:block"><span>Shudhu ekta ongsho (start-end), e.g. 00:10:00-01:00:00</span><input type="text" id="section" placeholder="boro / live stream er jonno"></label>
-      <label class="field" style="display:block"><span>YouTube client (403 hole try korun)</span><select id="client"><option value="">Auto (403 hole nije retry kore)</option><option>tv</option><option>web_safari</option><option>web</option><option>mweb</option><option>android_vr</option><option>ios</option></select></label>
-      <label class="field" style="display:block"><span>&nbsp;</span><label><input type="checkbox" id="remoteEjs"> Remote JS components (ejs:github) allow</label></label>
-      <label class="field" style="display:block"><span>Extra yt-dlp arguments</span><input type="text" id="extra" placeholder="--no-mtime"></label>
+    <div class="sec">
+      <div class="toggles">
+        <label class="sw vid"><input type="checkbox" id="embedSubs" checked><span class="tr"></span><span class="tx" data-i18n="tEmbedSubs"></span></label>
+        <label class="sw vid"><input type="checkbox" id="compat" checked><span class="tr"></span><span class="tx" data-i18n="tCompat"></span></label>
+        <label class="sw"><input type="checkbox" id="embedMeta" checked><span class="tr"></span><span class="tx" data-i18n="tMeta"></span></label>
+        <label class="sw vid"><input type="checkbox" id="chapters"><span class="tr"></span><span class="tx" data-i18n="tChap"></span></label>
+        <label class="sw"><input type="checkbox" id="sponsor"><span class="tr"></span><span class="tx" data-i18n="tSponsor"></span></label>
+        <label class="sw plopt hide"><input type="checkbox" id="plFolder" checked><span class="tr"></span><span class="tx" data-i18n="tPlFolder"></span></label>
+        <label class="sw plopt hide"><input type="checkbox" id="plNum" checked><span class="tr"></span><span class="tx" data-i18n="tPlNum"></span></label>
+      </div>
     </div>
-  </details>
 
-  <div class="row" style="margin-top:16px"><button class="pri" id="dlBtn" onclick="startDownload()">⬇ Download</button><span class="sub" id="dlHint"></span></div>
-</div>
+    <details class="sec">
+      <summary><span data-i18n="adv"></span></summary>
+      <div class="grid3" style="margin-top:12px">
+        <div class="field"><label class="l" for="custom" data-i18n="advCustom"></label><input type="text" id="custom"></div>
+        <div class="field"><label class="l" for="rate" data-i18n="advRate"></label><input type="text" id="rate"></div>
+        <div class="field"><label class="l" for="section" data-i18n="advSection"></label><input type="text" id="section" data-i18n-ph="advSectionPh"></div>
+        <div class="field"><label class="l" for="client" data-i18n="advClient"></label><select id="client"><option value="" data-i18n="advClientAuto"></option><option>tv</option><option>web_safari</option><option>web</option><option>mweb</option><option>android_vr</option><option>ios</option></select></div>
+        <div class="field"><span class="l">&nbsp;</span><label class="sw"><input type="checkbox" id="remoteEjs"><span class="tr"></span><span class="tx" data-i18n="advEjs"></span></label></div>
+        <div class="field"><label class="l" for="extra" data-i18n="advExtra"></label><input type="text" id="extra" placeholder="--no-mtime"></div>
+      </div>
+    </details>
+  </section>
 
-<div class="card">
-  <div class="row" style="justify-content:space-between"><h2 style="margin:0">3 · Downloads</h2><button onclick="clearDone()">Clear finished</button></div>
-  <div id="jobs" style="margin-top:10px"><span class="sub">Kono download nai</span></div>
+  <div class="dlbar">
+    <span class="sub" id="dlHint"></span>
+    <button class="btn pri lg" id="dlBtn" onclick="startDownload()"><svg class="i"><use href="#i-download"/></svg><span data-i18n="dlBtn"></span></button>
+  </div>
+
+  <footer class="foot">
+    <span data-i18n="footDev"></span> <b data-i18n="devName"></b> &middot; GitHub: <a href="https://github.com/aranashifter" target="_blank" rel="noopener">@aranashifter</a> &middot; <a href="https://github.com/aranashifter/ytdlp-ui" target="_blank" rel="noopener" data-i18n="footSrc"></a><br>
+    <span data-i18n="footPow"></span> <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> &amp; <a href="https://ffmpeg.org" target="_blank" rel="noopener">FFmpeg</a> &middot; <span data-i18n="footPers"></span>
+  </footer>
+</main>
+
+<aside class="side">
+  <section class="card" style="display:flex;flex-direction:column;min-height:0;margin-bottom:0">
+    <div class="card-h"><span class="step"><svg class="i" style="width:14px;height:14px"><use href="#i-download"/></svg></span><h2><span data-i18n="dlT"></span> <span class="badge" id="jobCount">0</span></h2>
+      <button class="btn sm" onclick="clearDone()" data-i18n="clearFin"></button></div>
+    <div class="jobs" id="jobs"></div>
+  </section>
+</aside>
 </div>
-<footer class="foot">
-  Developed by <b>Rakib Al Hasan</b> &middot; GitHub: <a href="https://github.com/aranashifter" target="_blank" rel="noopener">@aranashifter</a> &middot; <a href="https://github.com/aranashifter/ytdlp-ui" target="_blank" rel="noopener">Source &amp; updates</a><br>
-  Powered by <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> and <a href="https://ffmpeg.org" target="_blank" rel="noopener">FFmpeg</a> &middot; For personal use with content you have the right to download
-</footer>
 </div>
+<div class="toasts" id="toasts"></div>
 
 <script>
+/* ================= i18n ================= */
+const I18N={
+en:{
+openFolder:"Open folder",updateYt:"Update yt-dlp",updateNightly:"Nightly",updateNightlyTip:"Try this if YouTube stops working",updating:"Updating…",themeTip:"Switch theme",
+cfgMissing:"yt-dlp.exe not found. Put it in this folder.",missing:"missing",
+jsWarnT:"JS runtime (deno) is missing",
+jsWarnB:"Newer yt-dlp needs it for YouTube. Without it you may see <b>403 Forbidden</b> errors or fewer qualities. Fix: put <code>deno.exe</code> next to yt-dlp.exe (github.com/denoland/deno/releases, file deno-x86_64-pc-windows-msvc.zip) or run <code>winget install DenoLand.Deno</code>, then start start.bat again.",
+offline:"Cannot reach the tool's server. Make sure the black window is still open, then reload this page.",
+s1:"Video or playlist link",urlsPh:"Paste a link here. For several links, put one per line",playlistMode:"Download as playlist",cookiesNone:"Cookies: none",cookiesTip:"Browser cookies for age-restricted / private videos",fetchBtn:"Fetch info",fetchTip:"Load qualities, audio tracks and subtitles",fetching:"Fetching info… large playlists can take a while",needLink:"Please paste a valid link first",videosN:"{n} videos",
+plItems:"Playlist items",all:"All",noneBtn:"None",
+s2:"Options",modeVideo:"Video",modeAudio:"Audio only",quality:"Quality",container:"Container",audioFormat:"Audio format",thumbnail:"Thumbnail",thumbNone:"Don't download",thumbEmbed:"Embed in file",thumbFile:"Save as image file",thumbBoth:"Embed + save image",saveTo:"Save to folder",
+qBest:"Best available (auto)",qAutoG:"Auto: best of that resolution",qExactG:"Exact format (bitrate · size)",qAutoN:"{h}p (auto)",
+trimT:"Trim",trimSub:"Download only a part of the video (great for long videos and live streams)",trimStart:"Start (hh:mm:ss, mm:ss or seconds)",trimEnd:"End (empty = until the end)",trimLen:"Clip length",trimPct:"{p}% of video",trimPrecise:"Precise cut (frame-accurate, slower, re-encodes)",
+trimNote:"A normal cut is fast, but start/end can be off by 1–5 seconds. ⚠ Subtitles keep the original video's timing, so they may not match the trimmed clip (untick subtitles if you don't need them).",
+trimLS:"Open start in YouTube",trimLE:"Open end in YouTube",trimBad:"Invalid time format. Use 00:10:00, 10:00 or seconds",trimEndErr:"End time must be greater than the start time",trimStartErr:"Start time is beyond the video length",
+estT:"Estimated size: ~{s}",estUnk:"(size of some parts unknown)",estNo:"Size unknown (this video's formats don't report it)",estPl:"per video, varies",partV:"video",partA:"audio",estTrim:"trim {len} (~{p}% of video)",
+bigWarn:"<b>Large file.</b> Every embed step (merge, subtitles, thumbnail, metadata) rewrites the whole {s} file, which takes hours and needs about {d} of free disk space. Cancelling midway corrupts the file. Tip: pick a lower quality (720p), download only a part (Trim) or use fast settings.",fastBtn:"Apply fast settings",
+fmtSum:"All available formats (like yt-dlp -F): resolution, bitrate, size",showHls:"Show HLS (m3u8) formats",
+fmtHint:"Video: click a row (the Quality menu follows). Audio: tick one or more (more than one merges into MKV). If no audio is ticked, the audio language below or the best audio is used.",
+thRes:"Resolution",thFps:"FPS",thCodec:"Codec",thBit:"Bitrate",thSize:"Size",thExt:"Ext",thNotes:"Notes",thLang:"Language / track",
+audT:"Audio language / tracks",audHint:"Tick several to merge them all (saved as MKV)",audPh:"Fetch info to see audio tracks",audOne:"This video has only one audio track (the default is used)",subM:"Subtitles (manual)",subA:"Subtitles (auto-generated / auto-translated)",subPh:"Fetch info to see them",noSubM:"No manual subtitles",noSubA:"No auto subtitles",searchLang:"Search language…",
+tEmbedSubs:"Embed subtitles into the video",tCompat:"Prefer H.264/AAC (plays on every device)",tMeta:"Embed metadata",tChap:"Embed chapters",tSponsor:"SponsorBlock: remove sponsor segments",tPlFolder:"Separate folder for the playlist",tPlNum:"Number files 001, 002…",
+adv:"Advanced",advCustom:"Custom format (-f), e.g. 137+140",advRate:"Speed limit (e.g. 2M, 500K)",advSection:"Only a part (start-end), e.g. 00:10:00-01:00:00",advSectionPh:"for long videos / live streams",advClient:"YouTube client (try if you get 403)",advClientAuto:"Auto (retries by itself on 403)",advEjs:"Allow remote JS components (ejs:github)",advExtra:"Extra yt-dlp arguments",
+dlBtn:"Download",queuedN:"{n} job(s) added to the queue",noItems:"No videos selected",diskWarn:"⚠ Free disk space is {free}, but merging/embedding may need about {need} (file size {size}). Low space can corrupt the file. Download anyway?",
+dlT:"Downloads",clearFin:"Clear finished",noDl:"No downloads yet",s_queued:"queued",s_running:"running",s_done:"done",s_error:"error",s_cancelled:"cancelled",bLog:"Log",bCancel:"Cancel",bRetry:"Retry",bClean:"Clean & retry",retryTip:"Resume from the earlier part file",cleanTip:"Delete every partial/broken file of this video and start fresh",etaL:"ETA",itemL:"item",logHint:" — open Log for the reason",
+cancelC:"⚠ Merging/embedding is in progress. Cancelling now can corrupt the main file (and a later retry may pick up the broken file). Cancel anyway?",
+cleanC:"This will delete every file of this video (name contains [video-id]): partial downloads, temp files, broken video, thumbnail, subtitles, then start fresh. OK?",attempt:"try {a}/{b}",
+st_dl:"Downloading",st_merge:"Merging",st_conv:"Converting audio",st_subs:"Embedding subtitles",st_thumb:"Embedding thumbnail",st_meta:"Writing metadata",st_cthumb:"Converting thumbnail",st_csubs:"Converting subtitles",st_sb:"SponsorBlock",st_chap:"Chapters",st_fix:"Fixing m4a",st_fin:"Finished",st_fine:"Finished (with errors)",st_finw:"Finished (check warning)",
+srvNoYt:"yt-dlp.exe not found. Put yt-dlp.exe in this folder.",srvBadUrl:"Please enter a valid URL (http/https)",srvTimeout:"Timed out. Check your internet / the URL",srvNoFormats:"No video formats found. Probably the JS runtime (deno) is missing or yt-dlp is outdated. Press 'Update yt-dlp' above and put deno.exe in the folder.",srvNoJs:"JS runtime (deno) not found, so some high-quality formats may be missing / 403 errors can happen.",srvNoUrl:"No valid URL",srvRunning:"The job is running, cancel it first",
+wCorrupt:"The main file cannot be played (corrupt/incomplete). Press 'Clean & retry'.",wIncomplete:"File is incomplete: duration {a}, but the video is {b}. Press 'Clean & retry'.",wNoMain:"The main video file was not found (merge did not happen). Press 'Clean & retry'.",wJunk:"Leftover intermediate/temp files: {l}",errHint:"Tip: put deno.exe in this folder and press 'Update yt-dlp'.",
+footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"For personal use with content you have the right to download"
+},
+bn:{
+openFolder:"ফোল্ডার খুলুন",updateYt:"yt-dlp আপডেট",updateNightly:"নাইটলি",updateNightlyTip:"YouTube কাজ না করলে এটি চেষ্টা করুন",updating:"আপডেট হচ্ছে…",themeTip:"থিম পরিবর্তন",
+cfgMissing:"yt-dlp.exe পাওয়া যায়নি। এই ফোল্ডারে রাখুন।",missing:"নেই",
+jsWarnT:"JS runtime (deno) নেই",
+jsWarnB:"নতুন yt-dlp-তে YouTube-এর জন্য এটি লাগে। না থাকলে <b>403 Forbidden</b> এরর বা কম কোয়ালিটি দেখা যেতে পারে। সমাধান: <code>deno.exe</code> yt-dlp.exe-এর পাশে রাখুন (github.com/denoland/deno/releases থেকে deno-x86_64-pc-windows-msvc.zip) অথবা <code>winget install DenoLand.Deno</code> চালান, তারপর start.bat আবার চালু করুন।",
+offline:"tool-এর সার্ভারের সাথে যোগাযোগ হচ্ছে না। কালো উইন্ডোটি খোলা আছে কিনা দেখুন, তারপর এই পেজ রিলোড করুন।",
+s1:"ভিডিও বা প্লেলিস্টের লিংক",urlsPh:"এখানে লিংক পেস্ট করুন (একাধিক হলে প্রতি লাইনে একটি)",playlistMode:"প্লেলিস্ট হিসেবে ডাউনলোড",cookiesNone:"কুকিজ: নেই",cookiesTip:"বয়স-সীমাবদ্ধ বা প্রাইভেট ভিডিওর জন্য ব্রাউজারের কুকিজ",fetchBtn:"তথ্য আনুন",fetchTip:"কোয়ালিটি, অডিও ট্র্যাক ও সাবটাইটেল লোড করে",fetching:"তথ্য আনা হচ্ছে… বড় প্লেলিস্টে একটু সময় লাগতে পারে",needLink:"আগে একটি সঠিক লিংক দিন",videosN:"{n}টি ভিডিও",
+plItems:"প্লেলিস্টের ভিডিও",all:"সব",noneBtn:"কোনোটি নয়",
+s2:"অপশন",modeVideo:"ভিডিও",modeAudio:"শুধু অডিও",quality:"কোয়ালিটি",container:"কন্টেইনার",audioFormat:"অডিও ফরম্যাট",thumbnail:"থাম্বনেইল",thumbNone:"ডাউনলোড করবেন না",thumbEmbed:"ফাইলের ভেতরে এমবেড",thumbFile:"আলাদা ছবি হিসেবে সেভ",thumbBoth:"এমবেড + ছবি সেভ",saveTo:"সেভ করার ফোল্ডার",
+qBest:"সেরা কোয়ালিটি (অটো)",qAutoG:"অটো: ওই রেজোলিউশনের সেরা",qExactG:"নির্দিষ্ট ফরম্যাট (বিটরেট · সাইজ)",qAutoN:"{h}p (অটো)",
+trimT:"ট্রিম",trimSub:"পুরো ভিডিও নয়, শুধু একটি অংশ ডাউনলোড (বড় ভিডিও ও লাইভ স্ট্রিমের জন্য দরকারি)",trimStart:"শুরু (hh:mm:ss, mm:ss বা সেকেন্ড)",trimEnd:"শেষ (খালি = একদম শেষ পর্যন্ত)",trimLen:"ক্লিপের দৈর্ঘ্য",trimPct:"ভিডিওর {p}%",trimPrecise:"নিখুঁত কাট (ফ্রেম-একুরেট, একটু ধীর, রি-এনকোড হয়)",
+trimNote:"সাধারণ কাট দ্রুত, কিন্তু শুরু/শেষে ১–৫ সেকেন্ড হেরফের হতে পারে। ⚠ সাবটাইটেলের টাইমিং পুরো ভিডিওর হিসাবে থাকে, তাই ট্রিম করা ক্লিপে না-ও মিলতে পারে (দরকার না হলে সাবটাইটেল বাদ দিন)।",
+trimLS:"শুরুর সময়ে YouTube-এ দেখুন",trimLE:"শেষের সময়ে দেখুন",trimBad:"সময়ের ফরম্যাট ঠিক নয়। লিখুন: 00:10:00 বা 10:00 বা সেকেন্ড",trimEndErr:"শেষের সময় শুরুর সময়ের চেয়ে বড় হতে হবে",trimStartErr:"শুরুর সময় ভিডিওর দৈর্ঘ্যের চেয়ে বেশি",
+estT:"আনুমানিক সাইজ: ~{s}",estUnk:"(কিছু অংশের সাইজ জানা নেই)",estNo:"সাইজ জানা যাচ্ছে না (এই ভিডিওর ফরম্যাটে সাইজ দেওয়া নেই)",estPl:"প্রতিটি ভিডিওর জন্য আলাদা",partV:"ভিডিও",partA:"অডিও",estTrim:"ট্রিম {len} (ভিডিওর ~{p}%)",
+bigWarn:"<b>বড় ফাইল।</b> প্রতিটি এমবেড ধাপে (মার্জ, সাবটাইটেল, থাম্বনেইল, মেটাডেটা) পুরো {s} ফাইল আবার কপি হয়, ফলে ঘণ্টার পর ঘণ্টা লাগে আর প্রায় {d} খালি ডিস্ক লাগে। মাঝপথে ক্যান্সেল করলে ফাইল নষ্ট হয়। পরামর্শ: কম কোয়ালিটি (720p), অংশ ডাউনলোড (ট্রিম) বা ফাস্ট সেটিংস।",fastBtn:"ফাস্ট সেটিংস প্রয়োগ করুন",
+fmtSum:"সব ফরম্যাট (yt-dlp -F এর মতো): রেজোলিউশন, বিটরেট, সাইজ",showHls:"HLS (m3u8) ফরম্যাট দেখান",
+fmtHint:"ভিডিও: একটি সারিতে ক্লিক করুন (ওপরের কোয়ালিটি মেনুও বদলাবে)। অডিও: এক বা একাধিক টিক দিন (একাধিক হলে MKV-তে মার্জ হয়)। অডিও টিক না দিলে নিচের অডিও ভাষা বা সেরা অডিও ব্যবহার হবে।",
+thRes:"রেজোলিউশন",thFps:"FPS",thCodec:"কোডেক",thBit:"বিটরেট",thSize:"সাইজ",thExt:"এক্সটেনশন",thNotes:"নোট",thLang:"ভাষা / ট্র্যাক",
+audT:"অডিও ভাষা / ট্র্যাক",audHint:"একাধিক টিক দিলে সব একসাথে মার্জ হবে (MKV হিসেবে)",audPh:"তথ্য আনলে অডিও ট্র্যাক দেখাবে",audOne:"এই ভিডিওতে একটিই অডিও ট্র্যাক (ডিফল্ট ব্যবহার হবে)",subM:"সাবটাইটেল (ম্যানুয়াল)",subA:"সাবটাইটেল (অটো-জেনারেটেড / অটো-অনুবাদ)",subPh:"তথ্য আনলে দেখাবে",noSubM:"ম্যানুয়াল সাবটাইটেল নেই",noSubA:"অটো সাবটাইটেল নেই",searchLang:"ভাষা খুঁজুন…",
+tEmbedSubs:"সাবটাইটেল ভিডিওর ভেতরে এমবেড করুন",tCompat:"H.264/AAC পছন্দ করুন (সব ডিভাইসে চলে)",tMeta:"মেটাডেটা এমবেড",tChap:"চ্যাপ্টার এমবেড",tSponsor:"SponsorBlock: স্পনসর অংশ বাদ দিন",tPlFolder:"প্লেলিস্টের জন্য আলাদা ফোল্ডার",tPlNum:"ফাইলের নামে 001, 002… নম্বর",
+adv:"অ্যাডভান্সড",advCustom:"কাস্টম ফরম্যাট (-f), যেমন 137+140",advRate:"স্পিড লিমিট (যেমন 2M, 500K)",advSection:"শুধু একটি অংশ (শুরু-শেষ), যেমন 00:10:00-01:00:00",advSectionPh:"বড় ভিডিও / লাইভ স্ট্রিমের জন্য",advClient:"YouTube ক্লায়েন্ট (403 এলে চেষ্টা করুন)",advClientAuto:"অটো (403 হলে নিজে আবার চেষ্টা করে)",advEjs:"রিমোট JS কম্পোনেন্ট (ejs:github) অনুমতি",advExtra:"অতিরিক্ত yt-dlp আর্গুমেন্ট",
+dlBtn:"ডাউনলোড",queuedN:"{n}টি কাজ কিউতে যোগ হয়েছে",noItems:"কোনো ভিডিও সিলেক্ট করা নেই",diskWarn:"⚠ ডিস্কে খালি জায়গা {free}, কিন্তু মার্জ/এমবেডসহ প্রায় {need} লাগতে পারে (ফাইল সাইজ {size})। জায়গা কম হলে ফাইল নষ্ট হয়। তবুও ডাউনলোড করবেন?",
+dlT:"ডাউনলোড",clearFin:"শেষ হওয়াগুলো মুছুন",noDl:"এখনও কোনো ডাউনলোড নেই",s_queued:"অপেক্ষায়",s_running:"চলছে",s_done:"সম্পন্ন",s_error:"ত্রুটি",s_cancelled:"বাতিল",bLog:"লগ",bCancel:"বাতিল",bRetry:"আবার চেষ্টা",bClean:"পরিষ্কার করে আবার",retryTip:"আগের আংশিক ফাইল থেকে চালিয়ে যায়",cleanTip:"এই ভিডিওর সব আধা/ভাঙা ফাইল মুছে নতুন করে শুরু",etaL:"বাকি",itemL:"আইটেম",logHint:" — কারণ দেখতে লগ চাপুন",
+cancelC:"⚠ এখন মার্জ/এমবেড চলছে। এখন বাতিল করলে মূল ফাইল নষ্ট হতে পারে (পরে আবার চেষ্টা করলেও আগের ভাঙা ফাইল থেকে যেতে পারে)। তবুও বাতিল করবেন?",
+cleanC:"এই ভিডিওর (নামে [video-id] আছে এমন) সব ফাইল (আধা ডাউনলোড, temp, ভাঙা ভিডিও, থাম্বনেইল, সাবটাইটেল) মুছে নতুন করে শুরু হবে। ঠিক আছে?",attempt:"চেষ্টা {a}/{b}",
+st_dl:"ডাউনলোড হচ্ছে",st_merge:"মার্জ হচ্ছে",st_conv:"অডিও কনভার্ট",st_subs:"সাবটাইটেল এমবেড",st_thumb:"থাম্বনেইল এমবেড",st_meta:"মেটাডেটা লেখা হচ্ছে",st_cthumb:"থাম্বনেইল কনভার্ট",st_csubs:"সাবটাইটেল কনভার্ট",st_sb:"SponsorBlock",st_chap:"চ্যাপ্টার",st_fix:"m4a ঠিক করা হচ্ছে",st_fin:"শেষ",st_fine:"শেষ (কিছু ত্রুটিসহ)",st_finw:"শেষ (সতর্কতা দেখুন)",
+srvNoYt:"yt-dlp.exe পাওয়া যাচ্ছে না। এই ফোল্ডারে yt-dlp.exe রাখুন।",srvBadUrl:"সঠিক URL দিন (http/https)",srvTimeout:"টাইমআউট: ইন্টারনেট / URL পরীক্ষা করুন",srvNoFormats:"কোনো ভিডিও ফরম্যাট পাওয়া যায়নি। সম্ভবত JS runtime (deno) নেই বা yt-dlp পুরোনো। উপরের 'yt-dlp আপডেট' চাপুন এবং deno.exe ফোল্ডারে রাখুন।",srvNoJs:"JS runtime (deno) পাওয়া যায়নি, তাই কিছু হাই-কোয়ালিটি ফরম্যাট দেখাচ্ছে না / 403 এরর হতে পারে।",srvNoUrl:"কোনো সঠিক URL নেই",srvRunning:"কাজ চলছে, আগে বাতিল করুন",
+wCorrupt:"মূল ফাইলটি চালানোর উপযোগী নয় (নষ্ট/অসম্পূর্ণ)। 'পরিষ্কার করে আবার' চাপুন।",wIncomplete:"ফাইল অসম্পূর্ণ: দৈর্ঘ্য {a}, কিন্তু ভিডিও {b}। 'পরিষ্কার করে আবার' চাপুন।",wNoMain:"মূল ভিডিও ফাইল পাওয়া যায়নি (মার্জ হয়নি)। 'পরিষ্কার করে আবার' চাপুন।",wJunk:"মাঝের/temp ফাইল রয়ে গেছে: {l}",errHint:"পরামর্শ: deno.exe এই ফোল্ডারে রাখুন এবং 'yt-dlp আপডেট' চাপুন।",
+footDev:"ডেভেলপার:",devName:"রাকিব আল হাসান",footSrc:"সোর্স ও আপডেট",footPow:"চালিত:",footPers:"শুধু আপনার অধিকার আছে এমন কনটেন্ট ডাউনলোডের জন্য"
+},
+bl:{
+openFolder:"Folder kholo",updateYt:"Update yt-dlp",updateNightly:"Nightly",updateNightlyTip:"YouTube kaj na korle eta try korun",updating:"Update hochhe…",themeTip:"Theme bodlao",
+cfgMissing:"yt-dlp.exe paoa jay nai. Ei folder e rakhun.",missing:"nai",
+jsWarnT:"JS runtime (deno) nai",
+jsWarnB:"Notun yt-dlp e YouTube er jonno eta lage. Na thakle <b>403 Forbidden</b> error ba kom quality dekhay. Fix: <code>deno.exe</code> yt-dlp.exe er pashe rakhun (github.com/denoland/deno/releases theke deno-x86_64-pc-windows-msvc.zip) ba <code>winget install DenoLand.Deno</code> chalan, tarpor start.bat abar chalu korun.",
+offline:"Tool er server er sathe jogajog hochhe na. Kalo window ta khola ache kina dekhun, tarpor page reload korun.",
+s1:"Video ba playlist er link",urlsPh:"Ekhane link paste korun (ekadhik hole protita alada line e)",playlistMode:"Playlist hishebe download",cookiesNone:"Cookies: none",cookiesTip:"Age-restricted / private video er jonno browser cookies",fetchBtn:"Info anun",fetchTip:"Quality, audio track ar subtitle load kore",fetching:"Info anchi… boro playlist hole ektu somoy lagte pare",needLink:"Age ekta valid link din",videosN:"{n}ta video",
+plItems:"Playlist er video",all:"Sob",noneBtn:"Kono ta na",
+s2:"Options",modeVideo:"Video",modeAudio:"Shudhu audio",quality:"Quality",container:"Container",audioFormat:"Audio format",thumbnail:"Thumbnail",thumbNone:"Download korbe na",thumbEmbed:"File er bhitore embed",thumbFile:"Alada image file hishebe save",thumbBoth:"Embed + image save",saveTo:"Save korar folder",
+qBest:"Best available (auto)",qAutoG:"Auto: oi resolution er best",qExactG:"Exact format (bitrate · size)",qAutoN:"{h}p (auto)",
+trimT:"Trim",trimSub:"Puro video na, shudhu ekta ongsho download (boro video / live stream er jonno dorkari)",trimStart:"Start (hh:mm:ss, mm:ss ba second)",trimEnd:"End (khali = shesh porjonto)",trimLen:"Clip er dhoirgho",trimPct:"video r {p}%",trimPrecise:"Precise cut (frame-accurate, ektu dheemi, re-encode hoy)",
+trimNote:"Normal cut druto, kintu start/end e 1-5 second ounch-nich hote pare. ⚠ Subtitle puro video r timing e thake, tai trim kora clip e mile nao jete pare (dorkar na hole subtitle tick uthiye dao).",
+trimLS:"Start e YouTube e dekho",trimLE:"End e dekho",trimBad:"Somoy er format thik noy. Likhun: 00:10:00 ba 10:00 ba second",trimEndErr:"End somoy Start er cheye boro hote hobe",trimStartErr:"Start somoy video r dhoirgho er cheye boro",
+estT:"Estimated size: ~{s}",estUnk:"(kichu part er size jana nai)",estNo:"Size jana jachhe na (ei video r format e size dey nai)",estPl:"protita video er jonno alada",partV:"video",partA:"audio",estTrim:"trim {len} (video r ~{p}%)",
+bigWarn:"<b>Boro file.</b> Protita embed step e (merge, subtitle, thumbnail, metadata) puro {s} file abar copy hoy, tai ghonta ghonta lage ar ~{d} free disk lage. Majhpothe cancel korle file corrupt hoy. Poramorsho: kom quality (720p), ekta ongsho (Trim) ba fast settings.",fastBtn:"Fast settings apply korun",
+fmtSum:"Sob available format (yt-dlp -F er moto): resolution, bitrate, size",showHls:"HLS (m3u8) format dekhao",
+fmtHint:"Video: ekta row te click koro (upore Quality menu o change hobe). Audio: ek ba ekadhik tick koro (ekadhik hole MKV te merge hobe). Audio tick na korle nicher audio language ba best audio use hobe.",
+thRes:"Resolution",thFps:"FPS",thCodec:"Codec",thBit:"Bitrate",thSize:"Size",thExt:"Ext",thNotes:"Notes",thLang:"Language / track",
+audT:"Audio language / track",audHint:"Ekadhik tick korle sob ekshathe merge hobe (MKV hishebe)",audPh:"Info anle audio track dekhabe",audOne:"Ei video te ekta-i audio track (default use hobe)",subM:"Subtitle (manual)",subA:"Subtitle (auto-generated / auto-translated)",subPh:"Info anle dekhabe",noSubM:"Manual subtitle nai",noSubA:"Auto subtitle nai",searchLang:"Language khujun…",
+tEmbedSubs:"Subtitle video te embed koro",tCompat:"H.264/AAC prefer (sob device e chole)",tMeta:"Metadata embed",tChap:"Chapters embed",tSponsor:"SponsorBlock: sponsor part remove",tPlFolder:"Playlist er alada folder",tPlNum:"File name e 001, 002… number",
+adv:"Advanced",advCustom:"Custom format (-f), e.g. 137+140",advRate:"Speed limit (e.g. 2M, 500K)",advSection:"Shudhu ekta ongsho (start-end), e.g. 00:10:00-01:00:00",advSectionPh:"boro video / live stream er jonno",advClient:"YouTube client (403 hole try korun)",advClientAuto:"Auto (403 hole nije retry kore)",advEjs:"Remote JS components (ejs:github) allow",advExtra:"Extra yt-dlp arguments",
+dlBtn:"Download",queuedN:"{n}ta job queue te add hoyeche",noItems:"Kothao kono video select kora nai",diskWarn:"⚠ Disk e free jayga {free}, kintu merge/embed shoho ~{need} lagte pare (file size {size}). Jayga kom hole file corrupt hoy. Tobuo download korbe?",
+dlT:"Downloads",clearFin:"Shesh gulo muchun",noDl:"Ekhono kono download nai",s_queued:"queued",s_running:"cholche",s_done:"done",s_error:"error",s_cancelled:"cancelled",bLog:"Log",bCancel:"Cancel",bRetry:"Retry",bClean:"Clean & retry",retryTip:"Ager part file theke resume",cleanTip:"Ei video r sob adha/vanga file muche notun kore",etaL:"ETA",itemL:"item",logHint:" — Log button chepe karon dekhun",
+cancelC:"⚠ Ekhon merge/embed cholche. Ekhon cancel korle main file corrupt hote pare (ar pore Retry korleo ager vanga file theke jete pare). Tobuo cancel?",
+cleanC:"Ei video r (naam e [video-id] thaka) sob file - adha download, temp, vanga video, thumbnail, subs - muche notun kore shuru korbe. Thik ache?",attempt:"try {a}/{b}",
+st_dl:"Downloading",st_merge:"Merging",st_conv:"Converting audio",st_subs:"Embedding subs",st_thumb:"Embedding thumbnail",st_meta:"Writing metadata",st_cthumb:"Converting thumbnail",st_csubs:"Converting subs",st_sb:"SponsorBlock",st_chap:"Chapters",st_fix:"Fixing m4a",st_fin:"Finished",st_fine:"Finished (with errors)",st_finw:"Finished (check warning)",
+srvNoYt:"yt-dlp.exe paoa jacche na. Ei folder e yt-dlp.exe rakhun.",srvBadUrl:"Valid URL din (http/https)",srvTimeout:"Timeout - internet / URL check korun",srvNoFormats:"Kono video format paoa jay nai.",srvNoJs:"JS runtime (deno) paoa jay nai.",srvNoUrl:"Kono valid URL nai",srvRunning:"Job cholche, age cancel korun",
+wCorrupt:"Main file play-yogyo noy.",wIncomplete:"File incomplete.",wNoMain:"Main video file paoa jay nai.",wJunk:"Intermediate/temp file baki ache: {l}",errHint:"Poramorsho: deno.exe ei folder e rakhun ar 'Update yt-dlp' chapun.",
+footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"Shudhu nijer / anumoti thaka content download korar jonno"
+}};
+let LANG='en';try{LANG=localStorage.getItem('lang')||'en'}catch(e){}
+if(!I18N[LANG])LANG='en';
+function t(k,p){let s=(I18N[LANG]&&I18N[LANG][k]);if(s===undefined)s=I18N.en[k];if(s===undefined)return k;if(p)for(const x in p)s=s.split('{'+x+'}').join(p[x]);return s}
+function applyI18n(root){root=root||document;
+  root.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));
+  root.querySelectorAll('[data-i18n-ph]').forEach(e=>e.placeholder=t(e.dataset.i18nPh));
+  root.querySelectorAll('[data-i18n-title]').forEach(e=>e.title=t(e.dataset.i18nTitle));
+}
+/* translate messages coming from the Python server (written in Banglish) */
+function srv(m){
+  if(!m||LANG==='bl')return m;
+  const R=[[/yt-dlp\.exe paoa jacche na/,'srvNoYt'],[/^Valid URL din/,'srvBadUrl'],[/^Timeout - internet/,'srvTimeout'],[/^Kono video format paoa jay nai/,'srvNoFormats'],[/^JS runtime \(deno\) paoa jay nai/,'srvNoJs'],[/^Kono valid URL nai/,'srvNoUrl'],[/^Job cholche/,'srvRunning'],[/^Main file play-yogyo noy/,'wCorrupt'],[/^Main video file paoa jay nai/,'wNoMain']];
+  for(const [re,k] of R)if(re.test(m))return t(k);
+  let x=m.match(/^File incomplete: duration (\S+), kintu video (\S+)\./);if(x)return t('wIncomplete',{a:x[1],b:x[2]});
+  x=m.match(/^Intermediate\/temp file baki ache: (.*)$/);if(x)return t('wJunk',{l:x[1]});
+  return m;
+}
+function srvErr(m){return srv(String(m||'').replace(/\s*\|\s*Poramorsho:.*$/,'')||m)+(/Poramorsho:/.test(m||'')?' | '+t('errHint'):'')}
+function stg(s){if(!s)return'';
+  const map={'Downloading':'st_dl','Merging':'st_merge','Converting audio':'st_conv','Embedding subs':'st_subs','Embedding thumbnail':'st_thumb','Writing metadata':'st_meta','Converting thumbnail':'st_cthumb','Converting subs':'st_csubs','SponsorBlock':'st_sb','Chapters':'st_chap','Fixing m4a':'st_fix','Finished':'st_fin','Finished (with errors)':'st_fine','Finished (check warning)':'st_finw'};
+  if(map[s])return t(map[s]);const m=s.match(/^Downloading · (.+)$/);return m?t('st_dl')+' · '+m[1]:s}
+function att(a){const m=(a||'').match(/^try (\d+)\/(\d+)$/);return m?t('attempt',{a:m[1],b:m[2]}):a}
+
+/* ================= helpers ================= */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function api(p,b){const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});return r.json();}
-let info=null, openLogs=new Set(), lastEst=0, lastJobs=[];
+const ico=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
+async function api(p,b){const r=await fetch(p,b?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}:{});return r.json()}
+function toast(m,type,ms){const el=document.createElement('div');el.className='toast '+(type||'');el.textContent=m;$('toasts').appendChild(el);setTimeout(()=>el.remove(),ms||4000)}
+let info=null,openLogs=new Set(),lastEst=0,lastJobs=[],cfgData=null;
 
+function setLang(l){
+  LANG=l;try{localStorage.setItem('lang',l)}catch(e){}
+  document.documentElement.lang=l==='bn'?'bn':'en';
+  document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.lang===l));
+  applyI18n();renderCfg();
+  const cur=$('height').value;buildQuality();if([...$('height').options].some(o=>o.value===cur))$('height').value=cur;
+  if(info){renderLists();estimate();trimUpd()}
+  loadJobs();
+}
+function toggleTheme(){const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('theme',n)}catch(e){}themeIcon()}
+function themeIcon(){$('themeBtn').innerHTML=ico(document.documentElement.dataset.theme==='dark'?'sun':'moon')}
+
+function renderCfg(){
+  const c=cfgData;if(!c)return;
+  if(!c.ytdlp){$('cfg').innerHTML=`<span class="chip bad"><i></i>${esc(t('cfgMissing'))}</span>`;return}
+  const chip=(ok,txt)=>`<span class="chip ${ok?'':'bad'}"><i></i>${esc(txt)}</span>`;
+  $('cfg').innerHTML=`<span class="chip"><i></i>yt-dlp ${esc(c.version)}</span>`+chip(c.ffmpeg,'ffmpeg'+(c.ffmpeg?'':' · '+t('missing')))+chip(!!c.js,'JS runtime'+(c.js?': '+c.js:' · '+t('missing')));
+  $('jsWarn').innerHTML=(!c.js)?`<div class="msg warn lg-icon" style="margin:0 0 16px">${ico('warn')}<div><b>${esc(t('jsWarnT'))}.</b> ${t('jsWarnB')}</div></div>`:'';
+}
+
+/* ================= init ================= */
 (async()=>{
-  const c=await api('/api/config');
-  $('dir').value=c.default_dir;
-  $('cfg').innerHTML=c.ytdlp?`yt-dlp ${esc(c.version)} · ffmpeg ${c.ffmpeg?'✅':'❌'} · JS runtime ${c.js?'✅ '+esc(c.js):'❌ none'}`:'❌ yt-dlp.exe paoa jay nai - ei folder e rakhun';
-  if(c.ytdlp&&!c.js)$('jsWarn').innerHTML='<div class="msg warn" style="margin-bottom:14px"><b>⚠ JS runtime (deno) nai.</b> Notun yt-dlp e YouTube er jonno eta lage - na thakle <b>403 Forbidden</b> error ba kom quality dekhay. Fix: <code>deno.exe</code> (free) download kore yt-dlp.exe er pashe rakhun (github.com/denoland/deno/releases → deno-x86_64-pc-windows-msvc.zip) ba cmd e <code>winget install DenoLand.Deno</code> likhun. Tarpor start.bat abar chalan.</div>';
-  loadJobs(); setInterval(loadJobs,1000);
+  setLang(LANG);themeIcon();
+  try{cfgData=await api('/api/config');$('dir').value=cfgData.default_dir;renderCfg()}catch(e){}
+  loadJobs();setInterval(loadJobs,1000);
 })();
 
 function mode(){return document.querySelector('input[name=mode]:checked').value}
@@ -203,7 +478,7 @@ document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>{
 function urlList(){return $('urls').value.split(/\s+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s))}
 $('urls').addEventListener('input',()=>{
   const u=urlList();
-  if(u.length===1&&/[?&]list=/.test(u[0])&&!/[?&]v=/.test(u[0])) $('isPl').checked=true;
+  if(u.length===1&&/[?&]list=/.test(u[0])&&!/[?&]v=/.test(u[0]))$('isPl').checked=true;
   syncPl();
 });
 $('isPl').onchange=syncPl;
@@ -211,48 +486,52 @@ function syncPl(){document.querySelectorAll('.plopt').forEach(e=>e.classList.tog
 
 async function fetchInfo(){
   const u=urlList();
-  if(!u.length){msg('infoMsg','Age ekta valid link din','err');return}
-  $('fetchBtn').disabled=true; msg('infoMsg','Info anchi… (playlist boro hole ektu somoy lagte pare)','info');
-  const r=await api('/api/info',{url:u[0],playlist:$('isPl').checked,cookies:$('cookies').value});
+  if(!u.length){msg('infoMsg',t('needLink'),'err');return}
+  $('fetchBtn').disabled=true;msg('infoMsg',t('fetching'),'info');
+  let r;try{r=await api('/api/info',{url:u[0],playlist:$('isPl').checked,cookies:$('cookies').value})}catch(e){r={error:t('offline')}}
   $('fetchBtn').disabled=false;
-  if(r.error){msg('infoMsg',r.error,'err');return}
-  info=r; info._url=u[0]; $('infoMsg').innerHTML=''; renderInfo();
+  if(r.error){msg('infoMsg',srv(r.error),'err');return}
+  info=r;info._url=u[0];$('infoMsg').innerHTML='';renderInfo();
 }
-function msg(id,t,c){$(id).innerHTML=`<div class="msg ${c}">${esc(t)}</div>`}
-function fmtDur(s){if(!s)return'';s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(x).padStart(2,'0')}
+function msg(id,m,c){$(id).innerHTML=`<div class="msg ${c}">${esc(m)}</div>`}
+function fmtDur(s){if(!s)return'';s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return(h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(x).padStart(2,'0')}
 
 function renderInfo(){
   $('infoCard').classList.remove('hide');
   $('vTitle').textContent=info.title||'';
-  $('vSub').textContent=[info.uploader,info.duration?fmtDur(info.duration):'',info.playlist?info.playlist.count+' videos':''].filter(Boolean).join(' · ');
+  $('vSub').textContent=[info.uploader,info.duration?fmtDur(info.duration):'',info.playlist?t('videosN',{n:info.playlist.count}):''].filter(Boolean).join(' · ');
   if(info.thumbnail){$('thumb').src=info.thumbnail;$('thumb').classList.remove('hide')}else $('thumb').classList.add('hide');
-  // playlist
   if(info.playlist){
-    $('isPl').checked=true; syncPl(); $('plBox').classList.remove('hide'); $('plCnt').textContent=info.playlist.count;
+    $('isPl').checked=true;syncPl();$('plBox').classList.remove('hide');$('plCnt').textContent=info.playlist.count;
     $('plList').innerHTML=info.playlist.entries.map(e=>`<label class="pl-item"><input type="checkbox" class="pli" value="${e.index}" checked onchange="plCount()"><small>${e.index}.</small> ${esc(e.title)} <small>${fmtDur(e.duration)}</small></label>`).join('');
     plCount();
-  } else $('plBox').classList.add('hide');
+  }else $('plBox').classList.add('hide');
   buildQuality();
-  if(info.warn&&info.warn.length)$('infoMsg').innerHTML=info.warn.map(w=>`<div class="msg warn">${esc(w)}</div>`).join('');
-  renderFormats();
-  // audio langs
-  $('audList').innerHTML=(info.audio_langs&&info.audio_langs.length>1)
-    ? info.audio_langs.map(a=>`<label><input type="checkbox" class="aud-c" value="${esc(a.code)}"> [${esc(a.code)}] ${esc(a.name)}${audInfo(a.code)}</label>`).join('')
-    : '<span class="sub">Ei video te ekta-i audio track (default use hobe)</span>';
-  $('subList').innerHTML=(info.subs&&info.subs.length)?info.subs.map(s=>`<label><input type="checkbox" class="sub-m" value="${esc(s.code)}"> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):'<span class="sub">Manual subtitle nai</span>';
-  $('autoList').innerHTML=(info.auto_subs&&info.auto_subs.length)?info.auto_subs.map(s=>`<label data-s="${esc((s.code+' '+s.name).toLowerCase())}"><input type="checkbox" class="sub-a" value="${esc(s.code)}"> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):'<span class="sub">Auto subtitle nai</span>';
-  trimInit();
-  estimate();
+  if(info.warn&&info.warn.length)$('infoMsg').innerHTML=info.warn.map(w=>`<div class="msg warn lg-icon">${ico('warn')}<div>${esc(srv(w))}</div></div>`).join('');
+  renderFormats();renderLists();
+  trimInit();estimate();
 }
-$('autoFilter').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#autoList label').forEach(l=>l.classList.toggle('hide',!l.dataset.s.includes(q)))};
+function renderLists(){
+  $('audList').innerHTML=(info.audio_langs&&info.audio_langs.length>1)
+    ?info.audio_langs.map(a=>`<label><input type="checkbox" class="aud-c" value="${esc(a.code)}" ${keepChecked('aud-c',a.code)}> <span>[${esc(a.code)}] ${esc(a.name)}<span class="sub">${esc(audInfo(a.code))}</span></span></label>`).join('')
+    :`<span class="sub">${esc(t('audOne'))}</span>`;
+  $('subList').innerHTML=(info.subs&&info.subs.length)?info.subs.map(s=>`<label><input type="checkbox" class="sub-m" value="${esc(s.code)}" ${keepChecked('sub-m',s.code)}> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):`<span class="sub">${esc(t('noSubM'))}</span>`;
+  $('autoList').innerHTML=(info.auto_subs&&info.auto_subs.length)?info.auto_subs.map(s=>`<label data-s="${esc((s.code+' '+s.name).toLowerCase())}"><input type="checkbox" class="sub-a" value="${esc(s.code)}" ${keepChecked('sub-a',s.code)}> [${esc(s.code)}] ${esc(s.name)}</label>`).join(''):`<span class="sub">${esc(t('noSubA'))}</span>`;
+  $('autoFilter').dispatchEvent(new Event('input'));
+}
+let _kc={};function keepChecked(cls,v){return(_kc[cls]||[]).includes(v)?'checked':''}
+function snapChecks(){_kc={};['aud-c','sub-m','sub-a'].forEach(c=>_kc[c]=[...document.querySelectorAll('.'+c+':checked')].map(e=>e.value))}
+$('autoFilter').oninput=e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#autoList label').forEach(l=>l.classList.toggle('hide',!(l.dataset.s||'').includes(q)))};
+
+/* ---- trim ---- */
 function parseT(s){s=(s||'').trim();if(!s)return null;const p=s.split(':');if(p.length>3||p.some(x=>!/^\d+(\.\d+)?$/.test(x)))return NaN;return p.reduce((a,x)=>a*60+ +x,0)}
-function fmtT(n){n=Math.round(n);const h=Math.floor(n/3600),m=Math.floor(n%3600/60),x=n%60;return [h,m,x].map(v=>String(v).padStart(2,'0')).join(':')}
+function fmtT(n){n=Math.round(n);const h=Math.floor(n/3600),m=Math.floor(n%3600/60),x=n%60;return[h,m,x].map(v=>String(v).padStart(2,'0')).join(':')}
 function trimState(){
-  if(!$('trimOn').checked)return {on:false};
+  if(!$('trimOn').checked)return{on:false};
   const dur=info&&info.duration?info.duration:null;
-  const s0=parseT($('trimStart').value), e=parseT($('trimEnd').value), s=s0===null?0:s0;
+  const s0=parseT($('trimStart').value),e=parseT($('trimEnd').value),s=s0===null?0:s0;
   const end=(e===null)?dur:e;
-  return {on:true,start:s,e:e,end:end,dur:dur,len:(end!=null&&!isNaN(s)&&!isNaN(end))?end-s:NaN,bad:isNaN(s)||isNaN(e)};
+  return{on:true,start:s,e:e,end:end,dur:dur,len:(end!=null&&!isNaN(s)&&!isNaN(end))?end-s:NaN,bad:isNaN(s)||isNaN(e)};
 }
 function trimInit(){
   const d=info&&info.duration?Math.ceil(info.duration):0;
@@ -261,10 +540,10 @@ function trimInit(){
   trimUpd();
 }
 function trimUpd(){
-  const t=trimState(); if(!t.on)return;
-  $('trimLen').textContent=isNaN(t.len)||t.len<=0?'-':fmtT(t.len)+(t.dur?` (${Math.round(t.len/t.dur*100)}% of video)`:'');
+  const tt=trimState();if(!tt.on)return;
+  $('trimLen').textContent=isNaN(tt.len)||tt.len<=0?'-':fmtT(tt.len)+(tt.dur?` (${t('trimPct',{p:Math.round(tt.len/tt.dur*100)})})`:'');
   const yt=info&&info.id&&/youtu/.test(info._url||'');
-  $('trimLinks').innerHTML=yt&&!isNaN(t.start)?`<a href="https://www.youtube.com/watch?v=${esc(info.id)}&t=${Math.floor(t.start)}s" target="_blank" rel="noopener" style="color:var(--ac2)">▶ Start e YouTube e dekho</a>`+(t.end&&!isNaN(t.end)?` · <a href="https://www.youtube.com/watch?v=${esc(info.id)}&t=${Math.floor(t.end)}s" target="_blank" rel="noopener" style="color:var(--ac2)">▶ End e dekho</a>`:''):'';
+  $('trimLinks').innerHTML=yt&&!isNaN(tt.start)?`<a href="https://www.youtube.com/watch?v=${esc(info.id)}&t=${Math.floor(tt.start)}s" target="_blank" rel="noopener">▶ ${esc(t('trimLS'))}</a>`+(tt.end&&!isNaN(tt.end)?` · <a href="https://www.youtube.com/watch?v=${esc(info.id)}&t=${Math.floor(tt.end)}s" target="_blank" rel="noopener">▶ ${esc(t('trimLE'))}</a>`:''):'';
   estimate();
 }
 $('trimOn').onchange=()=>{$('trimBody').classList.toggle('hide',!$('trimOn').checked);trimUpd();estimate()};
@@ -273,48 +552,48 @@ $('sS').oninput=()=>{if(+$('sS').value>=+$('sE').value)$('sS').value=Math.max(0,
 $('sE').oninput=()=>{if(+$('sE').value<=+$('sS').value)$('sE').value=Math.min(+$('sE').max,+$('sS').value+1);$('trimEnd').value=+$('sE').value>=+$('sE').max?'':fmtT($('sE').value);trimUpd()};
 $('trimStart').oninput=()=>{const v=parseT($('trimStart').value);if(v!=null&&!isNaN(v))$('sS').value=Math.min(v,+$('sS').max);trimUpd()};
 $('trimEnd').oninput=()=>{const v=parseT($('trimEnd').value);$('sE').value=(v==null)?$('sE').max:(isNaN(v)?$('sE').value:Math.min(v,+$('sE').max));trimUpd()};
+
+/* ---- formats ---- */
 const fmtSize=b=>b?(b>=1073741824?(b/1073741824).toFixed(2)+' GiB':(b/1048576).toFixed(1)+' MiB'):'';
 const isHls=f=>/m3u8/.test(f.proto||'');
 const codecName=c=>({avc1:'H.264',vp09:'VP9',vp9:'VP9',av01:'AV1',hev1:'HEVC',hvc1:'HEVC'}[c]||c);
 const kb=f=>{const b=f.abr||f.tbr;return b?Math.round(b)+'k':'?'};
 const hdrTxt=f=>f.hdr&&f.hdr!=='SDR'?' '+f.hdr:'';
 function vlabel(f){return `${f.h}p${f.fps>30?Math.round(f.fps):''}${hdrTxt(f)} · ${codecName(f.vc)} · ${f.tbr?Math.round(f.tbr)+'k':'?'} · ${fmtSize(f.size)||'size ?'} · ${f.ext}${f.ac!=='none'?' (+audio)':''}${isHls(f)?' · HLS':''}`}
-function videoRows(){return (info.formats||[]).filter(f=>f.vc!=='none'&&f.h&&($('showHls').checked||!isHls(f))).sort((a,b)=>(b.h||0)-(a.h||0)||(b.fps||0)-(a.fps||0)||(b.tbr||0)-(a.tbr||0))}
+function videoRows(){return((info&&info.formats)||[]).filter(f=>f.vc!=='none'&&f.h&&($('showHls').checked||!isHls(f))).sort((a,b)=>(b.h||0)-(a.h||0)||(b.fps||0)-(a.fps||0)||(b.tbr||0)-(a.tbr||0))}
 function buildQuality(){
-  const V=videoRows(), hs=[...new Set(V.map(f=>f.h))];
-  $('height').innerHTML='<option value="best">Best available (auto)'+(hs.length?` · ${hs[0]}p`:'')+'</option>'+
-    (hs.length?'<optgroup label="Auto: oi resolution er best">'+hs.map(h=>`<option value="${h}">${h}p (auto)</option>`).join('')+'</optgroup>':'')+
-    (V.length?'<optgroup label="Exact format (bitrate · size)">'+V.map(f=>`<option value="f:${esc(f.id)}">${esc(vlabel(f))}</option>`).join('')+'</optgroup>':'');
+  const V=videoRows(),hs=[...new Set(V.map(f=>f.h))];
+  $('height').innerHTML=`<option value="best">${esc(t('qBest'))}${hs.length?' · '+hs[0]+'p':''}</option>`+
+    (hs.length?`<optgroup label="${esc(t('qAutoG'))}">`+hs.map(h=>`<option value="${h}">${esc(t('qAutoN',{h:h}))}</option>`).join('')+'</optgroup>':'')+
+    (V.length?`<optgroup label="${esc(t('qExactG'))}">`+V.map(f=>`<option value="f:${esc(f.id)}">${esc(vlabel(f))}</option>`).join('')+'</optgroup>':'');
 }
 $('showHls').onchange=()=>{const cur=$('height').value;buildQuality();if([...$('height').options].some(o=>o.value===cur))$('height').value=cur;renderFormats();estimate()};
 function renderFormats(){
-  const all=info.formats||[]; if(!all.length){$('fmtBox').classList.add('hide');return}
+  const all=info.formats||[];if(!all.length){$('fmtBox').classList.add('hide');return}
   $('fmtBox').classList.remove('hide');
-  const ok=f=>$('showHls').checked||!isHls(f), V=videoRows();
+  const ok=f=>$('showHls').checked||!isHls(f),V=videoRows();
   const A=all.filter(f=>f.vc==='none'&&f.ac!=='none'&&ok(f)).sort((a,b)=>(b.abr||b.tbr||0)-(a.abr||a.tbr||0));
   const cur=$('height').value.startsWith('f:')?$('height').value.slice(2):'';
-  $('vTbl').innerHTML='<tr><th></th><th>ID</th><th>Resolution</th><th>FPS</th><th>Codec</th><th>Bitrate</th><th>Size</th><th>Ext</th><th>Notes</th></tr>'+
-    V.map(f=>`<tr><td><input type="radio" name="vf" value="${esc(f.id)}" ${f.id===cur?'checked':''}></td><td>${esc(f.id)}</td><td>${f.w||'?'}x${f.h||'?'} (${f.h}p)</td><td>${f.fps||''}</td><td>${esc(codecName(f.vc))}</td><td>${f.tbr?Math.round(f.tbr)+'k':''}</td><td>${fmtSize(f.size)}</td><td>${esc(f.ext)}</td><td>${f.ac!=='none'?'<span class="tag">+audio</span> ':''}${f.hdr&&f.hdr!=='SDR'?'<span class="tag">'+esc(f.hdr)+'</span> ':''}${isHls(f)?'<span class="tag">HLS</span>':''}</td></tr>`).join('');
-  $('aTbl').innerHTML='<tr><th></th><th>ID</th><th>Language / track</th><th>Codec</th><th>Bitrate</th><th>Size</th><th>Ext</th></tr>'+
-    A.map(f=>`<tr><td><input type="checkbox" class="fa" value="${esc(f.id)}"></td><td>${esc(f.id)}</td><td>${esc(f.lang?'['+f.lang+'] ':'')}${esc((f.note||'').split(',')[0])}</td><td>${esc(f.ac)}</td><td>${kb(f)}</td><td>${fmtSize(f.size)}</td><td>${esc(f.ext)}</td></tr>`).join('');
+  $('vTbl').innerHTML=V.map(f=>`<tr><td><input type="radio" name="vf" value="${esc(f.id)}" ${f.id===cur?'checked':''}></td><td>${esc(f.id)}</td><td>${f.w||'?'}x${f.h||'?'} (${f.h}p)</td><td>${f.fps||''}</td><td>${esc(codecName(f.vc))}</td><td>${f.tbr?Math.round(f.tbr)+'k':''}</td><td>${fmtSize(f.size)}</td><td>${esc(f.ext)}</td><td>${f.ac!=='none'?'<span class="tag">+audio</span> ':''}${f.hdr&&f.hdr!=='SDR'?'<span class="tag">'+esc(f.hdr)+'</span> ':''}${isHls(f)?'<span class="tag">HLS</span>':''}</td></tr>`).join('');
+  $('aTbl').innerHTML=A.map(f=>`<tr><td><input type="checkbox" class="fa" value="${esc(f.id)}"></td><td>${esc(f.id)}</td><td>${esc(f.lang?'['+f.lang+'] ':'')}${esc((f.note||'').split(',')[0])}</td><td>${esc(f.ac)}</td><td>${kb(f)}</td><td>${fmtSize(f.size)}</td><td>${esc(f.ext)}</td></tr>`).join('');
 }
 function bestAudio(lang){
   let c=(info.formats||[]).filter(f=>f.vc==='none'&&f.ac!=='none'&&(lang?f.lang===lang:true));
-  const nh=c.filter(f=>!isHls(f)); if(nh.length)c=nh;
+  const nh=c.filter(f=>!isHls(f));if(nh.length)c=nh;
   const m4a=$('container').value==='mp4'&&mode()==='video';
   c.sort((a,b)=>(b.abr||b.tbr||0)-(a.abr||a.tbr||0)||(m4a?((b.ext==='m4a')-(a.ext==='m4a')):0));
   return c[0]||null;
 }
 function audInfo(l){const f=bestAudio(l);return f?` · ${f.ac} ${kb(f)}${f.size?' · '+fmtSize(f.size):''}`:''}
 function audioRows(){
-  const manual=checked('.fa'); if(manual.length)return manual.map(id=>info.formats.find(f=>f.id===id)).filter(Boolean);
+  const manual=checked('.fa');if(manual.length)return manual.map(id=>info.formats.find(f=>f.id===id)).filter(Boolean);
   return checked('.aud-c').map(bestAudio).filter(Boolean);
 }
 function exactFormat(){
-  if(!info||!info.formats)return '';
+  if(!info||!info.formats)return'';
   if(mode()==='audio'){const a=checked('.fa');return a.length?a[0]:''}
-  const val=$('height').value; if(!val.startsWith('f:'))return '';
-  const row=info.formats.find(f=>f.id===val.slice(2)); if(!row)return '';
+  const val=$('height').value;if(!val.startsWith('f:'))return'';
+  const row=info.formats.find(f=>f.id===val.slice(2));if(!row)return'';
   const ids=[row.id];
   if(row.ac==='none'){const a=audioRows();ids.push(...(a.length?a.map(f=>f.id):['ba']))}
   return ids.join('+');
@@ -322,9 +601,9 @@ function exactFormat(){
 function estimate(){
   const box=$('estimate');
   if(!info||!info.formats||!info.formats.length){box.classList.add('hide');return}
-  const fm=info.formats; let v=null, parts=[], total=0, unknown=false;
+  const fm=info.formats;let v=null,parts=[],total=0,unknown=false;
   if(mode()==='video'){
-    const val=$('height').value, pool=fm.filter(f=>f.vc!=='none'&&f.h&&!isHls(f));
+    const val=$('height').value,pool=fm.filter(f=>f.vc!=='none'&&f.h&&!isHls(f));
     if(val.startsWith('f:'))v=fm.find(f=>f.id===val.slice(2));
     else{
       const order=($('compat').checked&&$('container').value==='mp4')?['avc1','vp09','av01']:['av01','vp09','avc1'];
@@ -332,17 +611,20 @@ function estimate(){
       const p=(val==='best'?pool:pool.filter(f=>f.h<=+val)).slice().sort((a,b)=>(b.h-a.h)||((b.fps||0)-(a.fps||0))||(rank(a)-rank(b))||((b.tbr||0)-(a.tbr||0)));
       v=p[0]||null;
     }
-    if(v){parts.push(`video ${v.h}p ${codecName(v.vc)} ${v.tbr?Math.round(v.tbr)+'k':''} = ${fmtSize(v.size)||'?'}`);if(v.size)total+=v.size;else unknown=true}
+    if(v){parts.push(`${t('partV')} ${v.h}p ${codecName(v.vc)} ${v.tbr?Math.round(v.tbr)+'k':''} = ${fmtSize(v.size)||'?'}`);if(v.size)total+=v.size;else unknown=true}
   }
   if(!v||v.ac==='none'){
-    let a=audioRows(); if(!a.length){const b=bestAudio(null);a=b?[b]:[]}
-    a.forEach(f=>{parts.push(`audio${f.lang?' ['+f.lang+']':''} ${f.ac} ${kb(f)} = ${fmtSize(f.size)||'?'}`);if(f.size)total+=f.size;else unknown=true});
+    let a=audioRows();if(!a.length){const b=bestAudio(null);a=b?[b]:[]}
+    a.forEach(f=>{parts.push(`${t('partA')}${f.lang?' ['+f.lang+']':''} ${f.ac} ${kb(f)} = ${fmtSize(f.size)||'?'}`);if(f.size)total+=f.size;else unknown=true});
   }
   const ts=trimState();
-  if(ts.on&&ts.len>0&&info.duration){const f=Math.min(1,ts.len/info.duration);total=total*f;parts.push(`trim ${fmtT(ts.len)} (~${Math.round(f*100)}% of video)`)}
-  lastEst=total; box.classList.remove('hide');
-  box.innerHTML=total?`📦 <b>Estimated size: ~${fmtSize(total)}</b>${unknown?' (kichu part er size jana nai)':''} <span class="sub">— ${esc(parts.join(' + '))}${info.playlist?' · protita video er jonno proyojon onujayi alada':''}</span>`:'📦 Size jana jachhe na (ei video r format e size dey nai)';
-  if(total>5*1073741824){box.innerHTML+=`<div style="margin-top:8px;color:#ffd98a">⚠ <b>Boro file.</b> Protita embed step (merge, subs, thumbnail, metadata) e puro ${fmtSize(total)} file abar copy hoy, tai ghonta ghonta lage ar ~${fmtSize(total*2.1)} free disk lage. Cancel korle file corrupt hoy. Poramorsho: kom quality (720p) / ekta ongsho (Advanced) / fast settings. <button class="blue" style="padding:3px 10px;margin-left:6px" onclick="applyFast()">⚡ Fast settings apply</button></div>`}
+  if(ts.on&&ts.len>0&&info.duration){const f=Math.min(1,ts.len/info.duration);total=total*f;parts.push(t('estTrim',{len:fmtT(ts.len),p:Math.round(f*100)}))}
+  lastEst=total;box.classList.remove('hide');
+  let h=total
+    ?`<div class="est-main">${ico('box')}<div><b>${esc(t('estT',{s:fmtSize(total)}))}</b>${unknown?' '+esc(t('estUnk')):''} <span class="sub">— ${esc(parts.join(' + '))}${info.playlist?' · '+esc(t('estPl')):''}</span></div></div>`
+    :`<div class="est-main">${ico('box')}<div>${esc(t('estNo'))}</div></div>`;
+  if(total>5*1073741824)h+=`<div class="est-warn">${ico('warn')}<div>${t('bigWarn',{s:fmtSize(total),d:fmtSize(total*2.1)})} <button class="btn sm" style="margin-left:6px" onclick="applyFast()">${ico('zap')}${esc(t('fastBtn'))}</button></div></div>`;
+  box.innerHTML=h;
 }
 function applyFast(){
   $('embedSubs').checked=false;$('embedMeta').checked=false;$('chapters').checked=false;$('compat').checked=false;
@@ -350,18 +632,20 @@ function applyFast(){
   $('container').value='mkv';estimate();
 }
 document.addEventListener('change',e=>{
-  const t=e.target;
-  if(t.name==='vf'){$('height').value='f:'+t.value}
-  if(t.id==='height'){document.querySelectorAll('input[name=vf]').forEach(r=>r.checked=(t.value==='f:'+r.value))}
-  if(info&&(t.id==='height'||t.name==='vf'||t.name==='mode'||['container','compat'].includes(t.id)||t.classList.contains('fa')||t.classList.contains('aud-c')))estimate();
+  const x=e.target;
+  if(x.name==='vf'){$('height').value='f:'+x.value}
+  if(x.id==='height'){document.querySelectorAll('input[name=vf]').forEach(r=>r.checked=(x.value==='f:'+r.value))}
+  if(x.classList&&(x.classList.contains('aud-c')||x.classList.contains('sub-m')||x.classList.contains('sub-a')))snapChecks();
+  if(info&&(x.id==='height'||x.name==='vf'||x.name==='mode'||['container','compat'].includes(x.id)||(x.classList&&(x.classList.contains('fa')||x.classList.contains('aud-c')))))estimate();
 });
 function plAll(v){document.querySelectorAll('.pli').forEach(c=>c.checked=v);plCount()}
 function plCount(){$('plSel').textContent=document.querySelectorAll('.pli:checked').length}
 const checked=c=>[...document.querySelectorAll(c+':checked')].map(e=>e.value);
 function toRanges(a){a=a.map(Number).sort((x,y)=>x-y);const o=[];let s=null,p=null;for(const n of a){if(s===null){s=p=n}else if(n===p+1){p=n}else{o.push(s===p?''+s:s+'-'+p);s=p=n}}if(s!==null)o.push(s===p?''+s:s+'-'+p);return o.join(',')}
 
+/* ================= download ================= */
 async function startDownload(){
-  const u=urlList(); if(!u.length){alert('Link din');return}
+  const u=urlList();if(!u.length){toast(t('needLink'),'err');return}
   const o={mode:mode(),height:$('height').value.startsWith('f:')?'best':$('height').value,container:$('container').value,audio_format:$('afmt').value,
     thumb:$('thumbOpt').value,dir:$('dir').value,audio_langs:checked('.aud-c'),subs:checked('.sub-m'),auto_subs:checked('.sub-a'),
     embed_subs:$('embedSubs').checked,compat:$('compat').checked,embed_meta:$('embedMeta').checked,chapters:$('chapters').checked,
@@ -369,60 +653,65 @@ async function startDownload(){
     cookies:$('cookies').value,playlist:$('isPl').checked,playlist_folder:$('plFolder').checked,number_prefix:$('plNum').checked};
   const ts=trimState();
   if(ts.on){
-    if(ts.bad){alert('Trim er somoy format thik noy. Ekhane likhun: 00:10:00 ba 10:00 ba second');return}
-    if(ts.end!=null&&ts.end<=ts.start){alert('End somoy Start er cheye boro hote hobe');return}
-    if(ts.dur&&ts.start>=ts.dur){alert('Start somoy video r dhoirgho er cheye boro');return}
+    if(ts.bad){toast(t('trimBad'),'err');return}
+    if(ts.end!=null&&ts.end<=ts.start){toast(t('trimEndErr'),'err');return}
+    if(ts.dur&&ts.start>=ts.dur){toast(t('trimStartErr'),'err');return}
     o.section=fmtT(ts.start)+'-'+(ts.e===null?'inf':fmtT(ts.e));o.trim_precise=$('trimPrecise').checked;
   }
   if(!o.custom_format)o.custom_format=exactFormat();
   if(u.length===1&&info&&!info.playlist&&info.title&&info._url===u[0]){o.title=info.title+(o.section?' ✂ '+o.section:'');o.vid=info.id;o.duration=info.duration}
   if(u.length===1&&info&&info.playlist&&$('isPl').checked){
-    const sel=checked('.pli'); if(!sel.length){alert('Kothao kono video select kora nai');return}
+    const sel=checked('.pli');if(!sel.length){toast(t('noItems'),'err');return}
     if(sel.length<info.playlist.count)o.playlist_items=toRanges(sel);
   }
   if(lastEst>0){
     try{const dk=await api('/api/disk',{dir:o.dir});
-      if(dk.free&&dk.free<lastEst*2.1&&!confirm(`⚠ Disk e free jayga ${fmtSize(dk.free)}, kintu merge/embed shoho ~${fmtSize(lastEst*2.1)} lagte pare (file size ${fmtSize(lastEst)}). Jayga kom hole file corrupt hoy. Tobuo download korbe?`))return;
+      if(dk.free&&dk.free<lastEst*2.1&&!confirm(t('diskWarn',{free:fmtSize(dk.free),need:fmtSize(lastEst*2.1),size:fmtSize(lastEst)})))return;
     }catch(e){}
   }
   const r=await api('/api/download',{urls:u,options:o});
-  if(r.error){alert(r.error);return}
-  $('dlHint').textContent=`✅ ${r.ids.length}ta job queue te add hoyeche`; setTimeout(()=>$('dlHint').textContent='',4000);
+  if(r.error){toast(srv(r.error),'err');return}
+  toast(t('queuedN',{n:r.ids.length}),'ok');
   loadJobs();
 }
 
 async function loadJobs(){
-  const js=await api('/api/jobs'); lastJobs=js;
-  if(!js.length){$('jobs').innerHTML='<span class="sub">Kono download nai</span>';return}
+  let js;
+  try{js=await api('/api/jobs');$('offline').classList.add('hide')}
+  catch(e){$('offline').textContent=t('offline');$('offline').classList.remove('hide');return}
+  lastJobs=js;$('jobCount').textContent=js.length;
+  if(!js.length){$('jobs').innerHTML=`<div class="empty">${ico('inbox')}<div>${esc(t('noDl'))}</div></div>`;return}
   $('jobs').innerHTML=js.slice().reverse().map(j=>{
-    const info=[j.attempt,j.stage,j.percent?j.percent.toFixed(1)+'%':'',j.speed,j.eta?'ETA '+j.eta:'',j.item?'item '+j.item:''].filter(Boolean).join(' · ');
+    const meta=[att(j.attempt),stg(j.stage),j.percent?j.percent.toFixed(1)+'%':'',j.speed,j.eta?t('etaL')+' '+j.eta:'',j.item?t('itemL')+' '+j.item:''].filter(Boolean).join(' · ');
     const canCancel=j.status==='running'||j.status==='queued';
-    return `<div class="job ${j.status}"><div class="row" style="justify-content:space-between;flex-wrap:nowrap">
-      <div class="t">${esc(j.title)}<span class="badge ${j.status}">${j.status}</span></div>
-      <div class="row" style="flex:none"><button onclick="toggleLog('${j.id}')">Log</button>${canCancel?`<button onclick="cancelJob('${j.id}')">Cancel</button>`:`<button onclick="retryJob('${j.id}')" title="Ager part file theke resume">↻ Retry</button>${(j.status!=='done'||j.warn)?`<button onclick="cleanRetry('${j.id}')" title="Ei video r sob adha/vanga file muche notun kore">🧹 Clean & retry</button>`:''}`}</div></div>
+    const btns=`<button class="btn sm" onclick="toggleLog('${j.id}')">${ico('term')}${esc(t('bLog'))}</button>`+(canCancel
+      ?`<button class="btn sm" onclick="cancelJob('${j.id}')">${ico('x')}${esc(t('bCancel'))}</button>`
+      :`<button class="btn sm" onclick="retryJob('${j.id}')" title="${esc(t('retryTip'))}">${ico('undo')}${esc(t('bRetry'))}</button>`+((j.status!=='done'||j.warn)?`<button class="btn sm" onclick="cleanRetry('${j.id}')" title="${esc(t('cleanTip'))}">${ico('trash')}${esc(t('bClean'))}</button>`:''));
+    return `<div class="job ${j.status}"><div class="t">${esc(j.title)}<span class="badge ${j.status}">${esc(t('s_'+j.status))}</span></div>
       <div class="bar ${j.busy?'ind':''}"><div style="width:${j.percent}%"></div></div>
-      <div class="sub">${esc(info)}</div>
-      ${j.outfile?`<div class="sub">📄 ${esc(j.outfile)}</div>`:''}
-      ${j.warn?`<div class="msg warn">⚠ ${esc(j.warn)}</div>`:''}
-      ${j.error&&j.status==='error'?`<div class="msg err">${esc(j.error)}${j.error.length<14?' — Log button chepe poriskar karon dekhun':''}</div>`:''}
+      <div class="sub">${esc(meta)}</div>
+      ${j.outfile?`<div class="sub" style="display:flex;gap:6px;align-items:center;margin-top:4px">${ico('file')}<span style="word-break:break-all">${esc(j.outfile)}</span></div>`:''}
+      ${j.warn?`<div class="msg warn lg-icon" style="margin-top:8px">${ico('warn')}<div>${esc(j.warn.split(' | ').map(srv).join(' | '))}</div></div>`:''}
+      ${j.error&&j.status==='error'?`<div class="msg err" style="margin-top:8px">${esc(srvErr(j.error))}${j.error.length<14?esc(t('logHint')):''}</div>`:''}
+      <div class="jb">${btns}</div>
       ${openLogs.has(j.id)?`<pre>${esc(j.log.join('\n'))}</pre>`:''}</div>`}).join('');
 }
 function toggleLog(id){openLogs.has(id)?openLogs.delete(id):openLogs.add(id);loadJobs()}
 async function cancelJob(id){
   const j=lastJobs.find(x=>x.id===id);
-  if(j&&j.status==='running'&&j.stage&&j.stage!=='Downloading'&&!confirm('⚠ Ekhon merge/embed cholche. Ekhon cancel korle main file corrupt hote pare (ar pore Retry korleo ager vanga file theke jete pare). Tobuo cancel?'))return;
+  if(j&&j.status==='running'&&j.stage&&!/^Downloading/.test(j.stage)&&!confirm(t('cancelC')))return;
   await api('/api/cancel',{id});loadJobs()}
 async function cleanRetry(id){
-  if(!confirm('Ei video r (naam e [video-id] thaka) sob file - adha download, temp, vanga video, thumbnail, subs - muche notun kore shuru korbe. Thik ache?'))return;
-  const r=await api('/api/clean_retry',{id}); if(r.error)alert(r.error); loadJobs()}
+  if(!confirm(t('cleanC')))return;
+  const r=await api('/api/clean_retry',{id});if(r.error)toast(srv(r.error),'err');loadJobs()}
 async function retryJob(id){await api('/api/retry',{id});loadJobs()}
 async function clearDone(){await api('/api/clear',{});loadJobs()}
 async function openFolder(){await api('/api/open',{dir:$('dir').value})}
 async function updateYt(nightly){
-  $('updBtn').disabled=true;$('updBtn').textContent='Updating…';
-  const r=await api('/api/update',{nightly});
-  $('updBtn').disabled=false;$('updBtn').textContent='Update yt-dlp';
-  alert(r.error||r.output||'Done');location.reload();
+  $('updBtn').disabled=true;$('updLbl').textContent=t('updating');
+  let r;try{r=await api('/api/update',{nightly})}catch(e){r={error:t('offline')}}
+  $('updBtn').disabled=false;$('updLbl').textContent=t('updateYt');
+  alert(r.error?srv(r.error):(r.output||'Done'));location.reload();
 }
 </script>
 </body>
