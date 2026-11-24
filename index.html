@@ -138,6 +138,10 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 .empty{display:grid;place-items:center;padding:28px 10px;color:var(--mut);text-align:center;gap:8px}
 .empty svg.i{width:30px;height:30px;opacity:.5}
 
+.qbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.badge.paused{background:var(--wns);color:var(--wn)}.job.paused .bar>div{background:var(--wn)}
+.tot{display:flex;align-items:center;gap:6px;margin:2px 0 10px;color:var(--mut);font-size:12.5px}
+.tip{margin-top:12px;font-size:12.5px;color:var(--mut);display:flex;gap:8px;align-items:flex-start}.tip svg.i{margin-top:3px;color:var(--ac)}
 .foot{text-align:center;color:var(--mut);font-size:12.5px;padding:18px 0 28px;line-height:1.9}
 .toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
 .toast{background:var(--sf);border:1px solid var(--bd2);border-left:4px solid var(--ac);border-radius:10px;padding:10px 14px;box-shadow:var(--sh);max-width:380px;font-size:13.5px;animation:pop .2s}
@@ -166,6 +170,7 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 <symbol id="i-box" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
 <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
 <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" x2="20" y1="21" y2="21"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="3" y2="3"/><circle cx="9" cy="21" r="0"/><rect x="7" y="19" width="4" height="4" rx="1"/><rect x="14" y="10" width="4" height="4" rx="1"/><rect x="7" y="1" width="4" height="4" rx="1"/></symbol>
 </defs></svg>
@@ -232,7 +237,11 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
       <div class="field aud hide"><label class="l" for="afmt" data-i18n="audioFormat"></label><select id="afmt"><option>mp3</option><option>m4a</option><option>opus</option><option>flac</option><option>wav</option><option>best</option></select></div>
       <div class="field"><label class="l" for="thumbOpt" data-i18n="thumbnail"></label><select id="thumbOpt"><option value="none" data-i18n="thumbNone"></option><option value="embed" data-i18n="thumbEmbed"></option><option value="file" data-i18n="thumbFile"></option><option value="both" data-i18n="thumbBoth"></option></select></div>
       <div class="field"><label class="l" for="dir" data-i18n="saveTo"></label><input type="text" id="dir"></div>
+      <div class="field"><label class="l" for="engine" data-i18n="speedL"></label><select id="engine"><option value="smart" data-i18n="engSmart"></option><option value="auto" data-i18n="engAuto"></option><option value="frag" data-i18n="engFrag"></option><option value="aria2" data-i18n="engAria"></option></select></div>
+      <div class="field"><label class="l" for="net" data-i18n="netL"></label><select id="net"><option value="auto" data-i18n="netAuto"></option><option value="v4" data-i18n="netV4"></option></select></div>
     </div>
+    <div id="ariaBox" class="msg warn hide lg-icon"><svg class="i"><use href="#i-warn"/></svg><div><span data-i18n="ariaMissing"></span> <button class="btn sm" id="ariaBtn" onclick="installAria2()" style="margin-left:6px"><svg class="i"><use href="#i-download"/></svg><span data-i18n="ariaInstall"></span></button></div></div>
+    <div class="tip"><svg class="i"><use href="#i-zap"/></svg><span data-i18n="speedTip"></span></div>
 
     <div class="sec">
       <div class="trim">
@@ -278,6 +287,7 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
         <label class="sw"><input type="checkbox" id="embedMeta" checked><span class="tr"></span><span class="tx" data-i18n="tMeta"></span></label>
         <label class="sw vid"><input type="checkbox" id="chapters"><span class="tr"></span><span class="tx" data-i18n="tChap"></span></label>
         <label class="sw"><input type="checkbox" id="sponsor"><span class="tr"></span><span class="tx" data-i18n="tSponsor"></span></label>
+        <label class="sw"><input type="checkbox" id="guard" checked><span class="tr"></span><span class="tx" data-i18n="tGuard"></span></label>
         <label class="sw plopt hide"><input type="checkbox" id="plFolder" checked><span class="tr"></span><span class="tx" data-i18n="tPlFolder"></span></label>
         <label class="sw plopt hide"><input type="checkbox" id="plNum" checked><span class="tr"></span><span class="tx" data-i18n="tPlNum"></span></label>
       </div>
@@ -288,6 +298,7 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
       <div class="grid3" style="margin-top:12px">
         <div class="field"><label class="l" for="custom" data-i18n="advCustom"></label><input type="text" id="custom"></div>
         <div class="field"><label class="l" for="rate" data-i18n="advRate"></label><input type="text" id="rate"></div>
+        <div class="field"><label class="l" for="minSpeed" data-i18n="advMin"></label><input type="text" id="minSpeed" placeholder="2M"></div>
         <div class="field"><label class="l" for="section" data-i18n="advSection"></label><input type="text" id="section" data-i18n-ph="advSectionPh"></div>
         <div class="field"><label class="l" for="client" data-i18n="advClient"></label><select id="client"><option value="" data-i18n="advClientAuto"></option><option>tv</option><option>web_safari</option><option>web</option><option>mweb</option><option>android_vr</option><option>ios</option></select></div>
         <div class="field"><span class="l">&nbsp;</span><label class="sw"><input type="checkbox" id="remoteEjs"><span class="tr"></span><span class="tx" data-i18n="advEjs"></span></label></div>
@@ -311,6 +322,12 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
   <section class="card" style="display:flex;flex-direction:column;min-height:0;margin-bottom:0">
     <div class="card-h"><span class="step"><svg class="i" style="width:14px;height:14px"><use href="#i-download"/></svg></span><h2><span data-i18n="dlT"></span> <span class="badge" id="jobCount">0</span></h2>
       <button class="btn sm" onclick="clearDone()" data-i18n="clearFin"></button></div>
+    <div class="qbar">
+      <div class="row" style="gap:6px"><span class="sub" data-i18n="parallelL"></span>
+        <div class="seg sm" id="parSeg"><button data-n="1" onclick="setParallel(1)">1</button><button data-n="2" onclick="setParallel(2)">2</button><button data-n="3" onclick="setParallel(3)">3</button><button data-n="4" onclick="setParallel(4)">4</button></div></div>
+      <div class="row" style="gap:6px"><button class="btn sm" onclick="pauseAll()"><svg class="i"><use href="#i-pause"/></svg><span data-i18n="pauseAll"></span></button><button class="btn sm" onclick="resumeAll()"><svg class="i"><use href="#i-play"/></svg><span data-i18n="resumeAll"></span></button></div>
+    </div>
+    <div class="tot hide" id="totSpeed"></div>
     <div class="jobs" id="jobs"></div>
   </section>
 </aside>
@@ -322,6 +339,8 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 /* ================= i18n ================= */
 const I18N={
 en:{
+engSmart:"Smart (aria2c if installed)",tGuard:"Speed guard: reconnect automatically when speed drops",advMin:"Speed guard minimum speed (e.g. 2M; empty = automatic)",reconn:"reconnected {n}×",wSubs:"Subtitles could not be downloaded (YouTube rate limit, error 429). The video itself downloaded fine; try again later or pick fewer languages.",subMany:"Many auto-subtitle languages can trigger YouTube's rate limit (error 429). Pick only the languages you need.",
+speedL:"Speed mode",engAuto:"Auto (default)",engFrag:"Parallel fragments (-N 8)",engAria:"aria2c · 16 connections (fastest)",netL:"Network",netAuto:"Auto",netV4:"Force IPv4",ariaMissing:"aria2c is not installed yet (free, about 5 MB).",ariaInstall:"Install aria2c",ariaInstalling:"Downloading aria2c…",ariaOk:"aria2c installed. Fast mode is ready.",ariaFail:"Could not install aria2c: ",speedTip:"Speed jumps up and down? YouTube limits each connection and your route changes mid-download. Smart mode uses aria2c (16 connections) and Speed guard reconnects by itself when the speed drops. You can also try Force IPv4 or another YouTube client (Advanced).",s_paused:"paused",st_paused:"Paused",bPause:"Pause",bResume:"Resume",pauseAll:"Pause all",resumeAll:"Resume all",parallelL:"Parallel downloads",totalSpeed:"Total speed",pauseNo:"Pause works only while downloading (not during merge/embed or trim)",srvNoPause:"Pause works only while downloading (not during merge/embed or trim)",
 openFolder:"Open folder",updateYt:"Update yt-dlp",updateNightly:"Nightly",updateNightlyTip:"Try this if YouTube stops working",updating:"Updating…",themeTip:"Switch theme",
 cfgMissing:"yt-dlp.exe not found. Put it in this folder.",missing:"missing",
 jsWarnT:"JS runtime (deno) is missing",
@@ -352,6 +371,8 @@ wCorrupt:"The main file cannot be played (corrupt/incomplete). Press 'Clean & re
 footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"For personal use with content you have the right to download"
 },
 bn:{
+engSmart:"স্মার্ট (aria2c থাকলে সেটি)",tGuard:"স্পিড গার্ড: স্পিড কমলে নিজে নতুন কানেকশন নেবে",advMin:"স্পিড গার্ডের ন্যূনতম স্পিড (যেমন 2M; খালি = অটো)",reconn:"{n} বার নতুন কানেকশন",wSubs:"সাবটাইটেল ডাউনলোড হয়নি (YouTube রেট লিমিট, error 429)। ভিডিও ঠিকমতো নেমেছে; পরে আবার চেষ্টা করুন বা কম ভাষা বাছুন।",subMany:"অনেক অটো-সাবটাইটেল ভাষা বাছলে YouTube রেট লিমিট (error 429) দিতে পারে। শুধু দরকারি ভাষাগুলো বাছুন।",
+speedL:"স্পিড মোড",engAuto:"অটো (ডিফল্ট)",engFrag:"প্যারালাল ফ্র্যাগমেন্ট (-N 8)",engAria:"aria2c · ১৬ কানেকশন (সবচেয়ে দ্রুত)",netL:"নেটওয়ার্ক",netAuto:"অটো",netV4:"IPv4 ব্যবহার করুন",ariaMissing:"aria2c এখনও ইনস্টল করা নেই (ফ্রি, প্রায় ৫ MB)।",ariaInstall:"aria2c ইনস্টল করুন",ariaInstalling:"aria2c ডাউনলোড হচ্ছে…",ariaOk:"aria2c ইনস্টল হয়েছে। ফাস্ট মোড তৈরি।",ariaFail:"aria2c ইনস্টল করা যায়নি: ",speedTip:"স্পিড ওঠানামা করে? YouTube প্রতিটি কানেকশনের স্পিড সীমিত করে, আর ডাউনলোডের মাঝেও রুট বদলাতে পারে। স্মার্ট মোডে aria2c (১৬ কানেকশন) চলে আর স্পিড কমলে স্পিড গার্ড নিজে নতুন কানেকশন নেয়। IPv4 ব্যবহার বা অন্য YouTube ক্লায়েন্টও (অ্যাডভান্সড) চেষ্টা করতে পারেন।",s_paused:"বিরতি",st_paused:"বিরতিতে",bPause:"বিরতি",bResume:"চালু করুন",pauseAll:"সব বিরতি",resumeAll:"সব চালু",parallelL:"একসাথে ডাউনলোড",totalSpeed:"মোট স্পিড",pauseNo:"বিরতি শুধু ডাউনলোড চলার সময় কাজ করে (মার্জ/এমবেড বা ট্রিমের সময় নয়)",srvNoPause:"বিরতি শুধু ডাউনলোড চলার সময় কাজ করে (মার্জ/এমবেড বা ট্রিমের সময় নয়)",
 openFolder:"ফোল্ডার খুলুন",updateYt:"yt-dlp আপডেট",updateNightly:"নাইটলি",updateNightlyTip:"YouTube কাজ না করলে এটি চেষ্টা করুন",updating:"আপডেট হচ্ছে…",themeTip:"থিম পরিবর্তন",
 cfgMissing:"yt-dlp.exe পাওয়া যায়নি। এই ফোল্ডারে রাখুন।",missing:"নেই",
 jsWarnT:"JS runtime (deno) নেই",
@@ -382,6 +403,8 @@ wCorrupt:"মূল ফাইলটি চালানোর উপযোগী 
 footDev:"ডেভেলপার:",devName:"রাকিব আল হাসান",footSrc:"সোর্স ও আপডেট",footPow:"চালিত:",footPers:"শুধু আপনার অধিকার আছে এমন কনটেন্ট ডাউনলোডের জন্য"
 },
 bl:{
+engSmart:"Smart (aria2c thakle seta)",tGuard:"Speed guard: speed kome gele nije notun connection nibe",advMin:"Speed guard er minimum speed (e.g. 2M; khali = auto)",reconn:"{n} bar reconnect",wSubs:"Subtitle download hoyni (YouTube rate limit, error 429). Video thik moto namlo; pore abar chesta korun ba kom language select korun.",subMany:"Onek auto-subtitle language select korle YouTube rate limit (error 429) dite pare. Shudhu dorkari language gulo select korun.",
+speedL:"Speed mode",engAuto:"Auto (default)",engFrag:"Parallel fragments (-N 8)",engAria:"aria2c · 16 connection (sobcheye druto)",netL:"Network",netAuto:"Auto",netV4:"Force IPv4",ariaMissing:"aria2c ekhono install kora nai (free, prai 5 MB).",ariaInstall:"aria2c install korun",ariaInstalling:"aria2c download hochhe…",ariaOk:"aria2c install hoyeche. Fast mode ready.",ariaFail:"aria2c install kora gelo na: ",speedTip:"Speed uthha-nama kore? YouTube proti connection er speed limit kore, ar download er majheo route bodlate pare. Smart mode e aria2c (16 connection) chole ar speed kome gele Speed guard nije notun connection ney. Force IPv4 ba onno YouTube client (Advanced) o try korte paren.",s_paused:"paused",st_paused:"Paused",bPause:"Pause",bResume:"Resume",pauseAll:"Sob pause",resumeAll:"Sob resume",parallelL:"Ek sathe download",totalSpeed:"Total speed",pauseNo:"Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)",srvNoPause:"Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)",
 openFolder:"Folder kholo",updateYt:"Update yt-dlp",updateNightly:"Nightly",updateNightlyTip:"YouTube kaj na korle eta try korun",updating:"Update hochhe…",themeTip:"Theme bodlao",
 cfgMissing:"yt-dlp.exe paoa jay nai. Ei folder e rakhun.",missing:"nai",
 jsWarnT:"JS runtime (deno) nai",
@@ -422,7 +445,7 @@ function applyI18n(root){root=root||document;
 /* translate messages coming from the Python server (written in Banglish) */
 function srv(m){
   if(!m||LANG==='bl')return m;
-  const R=[[/yt-dlp\.exe paoa jacche na/,'srvNoYt'],[/^Valid URL din/,'srvBadUrl'],[/^Timeout - internet/,'srvTimeout'],[/^Kono video format paoa jay nai/,'srvNoFormats'],[/^JS runtime \(deno\) paoa jay nai/,'srvNoJs'],[/^Kono valid URL nai/,'srvNoUrl'],[/^Job cholche/,'srvRunning'],[/^Main file play-yogyo noy/,'wCorrupt'],[/^Main video file paoa jay nai/,'wNoMain']];
+  const R=[[/yt-dlp\.exe paoa jacche na/,'srvNoYt'],[/^Valid URL din/,'srvBadUrl'],[/^Timeout - internet/,'srvTimeout'],[/^Kono video format paoa jay nai/,'srvNoFormats'],[/^JS runtime \(deno\) paoa jay nai/,'srvNoJs'],[/^Kono valid URL nai/,'srvNoUrl'],[/^Job cholche/,'srvRunning'],[/^Main file play-yogyo noy/,'wCorrupt'],[/^Main video file paoa jay nai/,'wNoMain'],[/^Pause shudhu/,'srvNoPause'],[/^Subtitle download hoyni/,'wSubs']];
   for(const [re,k] of R)if(re.test(m))return t(k);
   let x=m.match(/^File incomplete: duration (\S+), kintu video (\S+)\./);if(x)return t('wIncomplete',{a:x[1],b:x[2]});
   x=m.match(/^Intermediate\/temp file baki ache: (.*)$/);if(x)return t('wJunk',{l:x[1]});
@@ -430,7 +453,7 @@ function srv(m){
 }
 function srvErr(m){return srv(String(m||'').replace(/\s*\|\s*Poramorsho:.*$/,'')||m)+(/Poramorsho:/.test(m||'')?' | '+t('errHint'):'')}
 function stg(s){if(!s)return'';
-  const map={'Downloading':'st_dl','Merging':'st_merge','Converting audio':'st_conv','Embedding subs':'st_subs','Embedding thumbnail':'st_thumb','Writing metadata':'st_meta','Converting thumbnail':'st_cthumb','Converting subs':'st_csubs','SponsorBlock':'st_sb','Chapters':'st_chap','Fixing m4a':'st_fix','Finished':'st_fin','Finished (with errors)':'st_fine','Finished (check warning)':'st_finw'};
+  const map={'Downloading':'st_dl','Merging':'st_merge','Converting audio':'st_conv','Embedding subs':'st_subs','Embedding thumbnail':'st_thumb','Writing metadata':'st_meta','Converting thumbnail':'st_cthumb','Converting subs':'st_csubs','SponsorBlock':'st_sb','Chapters':'st_chap','Fixing m4a':'st_fix','Finished':'st_fin','Finished (with errors)':'st_fine','Finished (check warning)':'st_finw','Paused':'st_paused'};
   if(map[s])return t(map[s]);const m=s.match(/^Downloading · (.+)$/);return m?t('st_dl')+' · '+m[1]:s}
 function att(a){const m=(a||'').match(/^try (\d+)\/(\d+)$/);return m?t('attempt',{a:m[1],b:m[2]}):a}
 
@@ -465,7 +488,7 @@ function renderCfg(){
 /* ================= init ================= */
 (async()=>{
   setLang(LANG);themeIcon();
-  try{cfgData=await api('/api/config');$('dir').value=cfgData.default_dir;renderCfg()}catch(e){}
+  try{cfgData=await api('/api/config');$('dir').value=cfgData.default_dir;renderCfg();renderPar();ariaCheck()}catch(e){}
   loadJobs();setInterval(loadJobs,1000);
 })();
 
@@ -636,6 +659,7 @@ document.addEventListener('change',e=>{
   if(x.name==='vf'){$('height').value='f:'+x.value}
   if(x.id==='height'){document.querySelectorAll('input[name=vf]').forEach(r=>r.checked=(x.value==='f:'+r.value))}
   if(x.classList&&(x.classList.contains('aud-c')||x.classList.contains('sub-m')||x.classList.contains('sub-a')))snapChecks();
+  if(x.classList&&x.classList.contains('sub-a')&&document.querySelectorAll('.sub-a:checked').length>3&&!window._subWarned){window._subWarned=1;toast(t('subMany'),'err',7000)}
   if(info&&(x.id==='height'||x.name==='vf'||x.name==='mode'||['container','compat'].includes(x.id)||(x.classList&&(x.classList.contains('fa')||x.classList.contains('aud-c')))))estimate();
 });
 function plAll(v){document.querySelectorAll('.pli').forEach(c=>c.checked=v);plCount()}
@@ -650,7 +674,7 @@ async function startDownload(){
     thumb:$('thumbOpt').value,dir:$('dir').value,audio_langs:checked('.aud-c'),subs:checked('.sub-m'),auto_subs:checked('.sub-a'),
     embed_subs:$('embedSubs').checked,compat:$('compat').checked,embed_meta:$('embedMeta').checked,chapters:$('chapters').checked,
     sponsorblock:$('sponsor').checked,custom_format:$('custom').value.trim(),section:$('section').value.trim(),client:$('client').value,remote_ejs:$('remoteEjs').checked,rate:$('rate').value,extra:$('extra').value,
-    cookies:$('cookies').value,playlist:$('isPl').checked,playlist_folder:$('plFolder').checked,number_prefix:$('plNum').checked};
+    cookies:$('cookies').value,engine:$('engine').value,guard:$('guard').checked,min_speed:$('minSpeed').value.trim(),force_ipv4:$('net').value==='v4',playlist:$('isPl').checked,playlist_folder:$('plFolder').checked,number_prefix:$('plNum').checked};
   const ts=trimState();
   if(ts.on){
     if(ts.bad){toast(t('trimBad'),'err');return}
@@ -680,11 +704,16 @@ async function loadJobs(){
   try{js=await api('/api/jobs');$('offline').classList.add('hide')}
   catch(e){$('offline').textContent=t('offline');$('offline').classList.remove('hide');return}
   lastJobs=js;$('jobCount').textContent=js.length;
+  const tot=js.filter(j=>j.status==='running').reduce((a,j)=>a+spdBytes(j.speed),0);
+  $('totSpeed').classList.toggle('hide',!tot);if(tot)$('totSpeed').innerHTML=ico('zap')+esc(t('totalSpeed'))+': <b style="color:var(--tx)">'+esc(fmtSize(tot))+'/s</b>';
   if(!js.length){$('jobs').innerHTML=`<div class="empty">${ico('inbox')}<div>${esc(t('noDl'))}</div></div>`;return}
   $('jobs').innerHTML=js.slice().reverse().map(j=>{
-    const meta=[att(j.attempt),stg(j.stage),j.percent?j.percent.toFixed(1)+'%':'',j.speed,j.eta?t('etaL')+' '+j.eta:'',j.item?t('itemL')+' '+j.item:''].filter(Boolean).join(' · ');
-    const canCancel=j.status==='running'||j.status==='queued';
-    const btns=`<button class="btn sm" onclick="toggleLog('${j.id}')">${ico('term')}${esc(t('bLog'))}</button>`+(canCancel
+    const meta=[att(j.attempt),stg(j.stage),j.percent?j.percent.toFixed(1)+'%':'',j.speed,j.eta?t('etaL')+' '+j.eta:'',j.item?t('itemL')+' '+j.item:'',j.reconnects?t('reconn',{n:j.reconnects}):''].filter(Boolean).join(' · ');
+    const canCancel=['running','queued','paused'].includes(j.status);
+    const pauseBtn=(j.status==='running'||j.status==='queued')
+      ?(j.pausable?`<button class="btn sm" onclick="pauseJob('${j.id}')">${ico('pause')}${esc(t('bPause'))}</button>`:`<button class="btn sm" disabled title="${esc(t('pauseNo'))}">${ico('pause')}${esc(t('bPause'))}</button>`):'';
+    const resumeBtn=j.status==='paused'?`<button class="btn sm pri" onclick="resumeJob('${j.id}')">${ico('play')}${esc(t('bResume'))}</button>`:'';
+    const btns=resumeBtn+pauseBtn+`<button class="btn sm" onclick="toggleLog('${j.id}')">${ico('term')}${esc(t('bLog'))}</button>`+(canCancel
       ?`<button class="btn sm" onclick="cancelJob('${j.id}')">${ico('x')}${esc(t('bCancel'))}</button>`
       :`<button class="btn sm" onclick="retryJob('${j.id}')" title="${esc(t('retryTip'))}">${ico('undo')}${esc(t('bRetry'))}</button>`+((j.status!=='done'||j.warn)?`<button class="btn sm" onclick="cleanRetry('${j.id}')" title="${esc(t('cleanTip'))}">${ico('trash')}${esc(t('bClean'))}</button>`:''));
     return `<div class="job ${j.status}"><div class="t">${esc(j.title)}<span class="badge ${j.status}">${esc(t('s_'+j.status))}</span></div>
@@ -704,6 +733,23 @@ async function cancelJob(id){
 async function cleanRetry(id){
   if(!confirm(t('cleanC')))return;
   const r=await api('/api/clean_retry',{id});if(r.error)toast(srv(r.error),'err');loadJobs()}
+function spdBytes(x){const m=(x||'').match(/([\d.]+)\s*(B|KiB|MiB|GiB)\/s/);return m?+m[1]*({B:1,KiB:1024,MiB:1048576,GiB:1073741824}[m[2]]):0}
+async function pauseJob(id){const r=await api('/api/pause',{id});if(r.error)toast(srv(r.error),'err');loadJobs()}
+async function resumeJob(id){await api('/api/resume',{id});loadJobs()}
+async function pauseAll(){await api('/api/pause_all',{});loadJobs()}
+async function resumeAll(){await api('/api/resume_all',{});loadJobs()}
+function renderPar(){const n=cfgData&&cfgData.parallel||1;document.querySelectorAll('#parSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.n===n))}
+async function setParallel(n){const r=await api('/api/settings',{parallel:n});if(cfgData)cfgData.parallel=r.parallel||n;renderPar()}
+function ariaCheck(){$('ariaBox').classList.toggle('hide',!(['aria2','smart'].includes($('engine').value)&&cfgData&&!cfgData.aria2))}
+$('engine').onchange=ariaCheck;
+async function installAria2(){
+  $('ariaBtn').disabled=true;toast(t('ariaInstalling'));
+  let r;try{r=await api('/api/install_aria2',{})}catch(e){r={error:t('offline')}}
+  $('ariaBtn').disabled=false;
+  if(r.error){toast(t('ariaFail')+r.error,'err',8000);return}
+  try{cfgData=await api('/api/config')}catch(e){}
+  toast(t('ariaOk'),'ok');ariaCheck();
+}
 async function retryJob(id){await api('/api/retry',{id});loadJobs()}
 async function clearDone(){await api('/api/clear',{});loadJobs()}
 async function openFolder(){await api('/api/open',{dir:$('dir').value})}

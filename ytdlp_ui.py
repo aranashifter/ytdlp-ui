@@ -22,9 +22,15 @@ def find_ytdlp():
     return shutil.which("yt-dlp")
 
 
+def find_aria2():
+    local = os.path.join(BASE, "aria2c.exe" if IS_WIN else "aria2c")
+    return local if os.path.isfile(local) else shutil.which("aria2c")
+
+
 YTDLP = find_ytdlp()
 HAS_LOCAL_FFMPEG = os.path.isfile(os.path.join(BASE, "ffmpeg.exe" if IS_WIN else "ffmpeg"))
 ENV = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+ENV["PATH"] = BASE + os.pathsep + ENV.get("PATH", "")
 
 
 # ---------------------------------------------------------------- helpers
@@ -193,8 +199,7 @@ def build_cmd(url, o, pre=None):
     mode = o.get("mode", "video")
     a = [YTDLP, "--newline", "--retries", "10", "--fragment-retries", "10",
                               "--throttled-rate", "100K", "--socket-timeout", "30"] + common_args(o)
-    if o.get("playlist"):
-        a.append("--ignore-errors")
+    a.append("--ignore-errors")  # subtitle 429 ityadi choto error e main video thambe na
 
     h = o.get("height")
     hf = "[height<=%d]" % int(h) if h not in (None, "", "best") else ""
@@ -234,7 +239,7 @@ def build_cmd(url, o, pre=None):
     auto = [c for c in (o.get("auto_subs") or [])]
     if subs or auto:
         allc = subs + [c for c in auto if c not in subs]
-        a += ["--sub-langs", ",".join(allc), "--convert-subs", "srt"]
+        a += ["--sub-langs", ",".join(allc), "--convert-subs", "srt", "--sleep-subtitles", "2"]
         if subs:
             a.append("--write-subs")
         if auto:
@@ -259,6 +264,14 @@ def build_cmd(url, o, pre=None):
         a += ["--sponsorblock-remove", "sponsor"]
     if o.get("rate"):
         a += ["-r", str(o["rate"])]
+    eng = o.get("engine", "smart")
+    if eng in ("aria2", "smart") and find_aria2():
+        a += ["--downloader", "aria2c", "--downloader", "dash,m3u8:native",
+              "--downloader-args", "aria2c:-x 16 -s 16 -k 1M"]
+    elif eng == "frag":
+        a += ["-N", "8"]
+    if o.get("force_ipv4"):
+        a.append("--force-ipv4")
     sec = (o.get("section") or "").strip()
     if not re.fullmatch(r"[\d:.]+-([\d:.]+|inf)", sec):
         sec = ""
@@ -312,6 +325,16 @@ class Job:
         self.attempt = ""
         self.warn = ""
         self.outfile = ""
+        self.pausing = False
+        self.restarting = False
+        self.sub_warn = False
+        self.g_peak = 0.0       # speed guard: best speed seen
+        self.g_restarts = 0
+        self.g_fruitless = 0
+        self.g_recovered = True
+        self.g_off = False
+        self.g_last = 0.0
+        self.slow_since = None
         self.status = "queued"
         self.percent = 0.0
         self.speed = ""
@@ -327,7 +350,11 @@ class Job:
     def public(self):
         return {"id": self.id, "url": self.url, "title": self.title, "status": self.status,
                 "percent": self.percent, "speed": self.speed, "eta": self.eta, "item": self.item,
-                "stage": self.stage, "attempt": self.attempt, "busy": bool(self.opts.get("section")) and self.status == "running" and self.percent == 0, "warn": self.warn, "outfile": self.outfile, "error": self.error, "dir": self.dir, "log": self.log[-60:]}
+                "stage": self.stage, "attempt": self.attempt, "busy": bool(self.opts.get("section") or (self.opts.get("engine", "smart") in ("aria2", "smart") and find_aria2())) and self.status == "running" and self.percent == 0,
+                "reconnects": self.g_restarts,
+                "pausable": (self.status == "queued") or (self.status == "running" and not self.opts.get("section")
+                                                          and (self.stage == "" or self.stage.startswith("Downloading"))),
+                "warn": self.warn, "outfile": self.outfile, "error": self.error, "dir": self.dir, "log": self.log[-60:]}
 
 
 def kill_tree(proc):
@@ -363,6 +390,62 @@ def attempt_list(o):
     return out
 
 
+def speed_bytes(txt):
+    m = re.match(r"\s*([\d.]+)\s*(B|KiB|MiB|GiB)", txt or "")
+    return float(m.group(1)) * {"B": 1, "KiB": 1024, "MiB": 1048576, "GiB": 1073741824}[m.group(2)] if m else 0.0
+
+
+def parse_rate(txt):
+    m = re.fullmatch(r"\s*([\d.]+)\s*([KkMmGg]?)\s*", txt or "")
+    if not m:
+        return 0.0
+    return float(m.group(1)) * {"": 1, "k": 1024, "m": 1048576, "g": 1073741824}[m.group(2).lower()]
+
+
+GUARD_SLOW_SECS = 20   # etokkhon dhore slow thakle reconnect
+GUARD_COOLDOWN = 45    # duita reconnect er majhe minimum gap
+
+
+def guard_check(job, sp):
+    """Speed guard: speed onek kome gele (best speed er 40% er niche, 20 sec) download theme
+    notun connection diye .part file theke abar shuru kore - YouTube prai notun connection e abar druto dey."""
+    o = job.opts
+    if sp <= 0 or not o.get("guard", True) or job.g_off or o.get("rate") or o.get("section"):
+        return
+    if job.cancelled or job.pausing or job.restarting:
+        return
+    now = time.time()
+    job.g_peak = max(job.g_peak, sp)
+    mn = parse_rate(o.get("min_speed"))
+    thr = mn if mn else (0.4 * job.g_peak if job.g_peak >= 1.5 * 1048576 else 0)
+    if thr <= 0 or job.percent >= 97:
+        job.slow_since = None
+        return
+    if sp >= thr:
+        job.slow_since = None
+        job.g_recovered = True
+        return
+    if job.slow_since is None:
+        job.slow_since = now
+        return
+    if now - job.slow_since >= GUARD_SLOW_SECS and now - job.g_last >= GUARD_COOLDOWN and job.g_restarts < 40:
+        if not job.g_recovered:
+            job.g_fruitless += 1
+            if job.g_fruitless >= 3:
+                job.g_off = True
+                job.log.append("Speed guard: reconnect korleo speed barche na, tai guard bondho kora holo")
+                return
+        else:
+            job.g_fruitless = 0
+        job.g_restarts += 1
+        job.g_last, job.g_recovered, job.slow_since = now, False, None
+        job.restarting = True
+        job.log.append("Speed guard: speed %.2f MiB/s (limit %.2f MiB/s) - notun connection diye abar shuru hocche"
+                       % (sp / 1048576, thr / 1048576))
+        if job.proc:
+            kill_tree(job.proc)
+
+
 def run_once(job, cmd):
     """Run one yt-dlp process. Returns (returncode, retryable)."""
     job.log.append("> " + " ".join(cmd))
@@ -383,12 +466,22 @@ def run_once(job, cmd):
             job.speed = s_.group(1) if s_ else job.speed
             job.eta = e_.group(1) if e_ else ""
             job.stage = "Downloading"
+            if s_:
+                guard_check(job, speed_bytes(s_.group(1)))
             if job.percent < 100:
                 continue
         m = re.search(r"\[download\]\s+([\d.]+\s?\w?i?B)\s+at\s+(.+?)(?:\s+\(|$)", line)
         if m and "%" not in line:
             job.stage = "Downloading · " + m.group(1)
             job.speed = m.group(2)
+            continue
+        m = re.search(r"\[#\w+\s+[\d.]+\w+/[\d.]+\w+\((\d+)%\).*?DL:(\S+?)(?:\s+ETA:(\S+?))?\]", line)
+        if m:
+            job.percent = float(m.group(1))
+            job.speed = m.group(2) + "/s"
+            job.eta = m.group(3) or ""
+            job.stage = "Downloading"
+            guard_check(job, speed_bytes(m.group(2)))
             continue
         m = re.search(r"Downloading item (\d+) of (\d+)", line)
         if m:
@@ -403,6 +496,8 @@ def run_once(job, cmd):
         m = re.match(r"\[(\w+)\]", line)
         if m and m.group(1) in STAGES:
             job.stage = STAGES[m.group(1)]
+        if "Unable to download video subtitles" in line or "Unable to download subtitles" in line:
+            job.sub_warn = True
         if line.startswith("ERROR"):
             job.error = line
             err_wait = line.strip() in ("ERROR:", "ERROR")
@@ -476,12 +571,14 @@ def parse_ts(x):
 def finalize(job):
     """After a 'successful' run: make sure the main file really exists and is complete."""
     o = job.opts
+    sub = ["Subtitle download hoyni (YouTube rate limit 429). Video thik moto namlo; pore abar chesta korun ba kom language select korun."] if job.sub_warn else []
     if o.get("playlist") or not o.get("vid"):
+        job.warn = " | ".join(sub)
         return
     files = leftovers(job)
     junk = [f for f in files if is_junk(f)]
     media = [f for f in files if f.rsplit(".", 1)[-1].lower() in MEDIA_EXT and not is_junk(f)]
-    warns = []
+    warns = list(sub)
     if media:
         main = max(media, key=os.path.getsize)
         job.outfile = "%s (%s)" % (os.path.basename(main), human(os.path.getsize(main)))
@@ -512,24 +609,41 @@ def finalize(job):
 
 def run_job(job):
     job.status = "running"
+    job.pausing = job.restarting = job.sub_warn = False
+    job.slow_since = None
     attempts = attempt_list(job.opts)
+    if job.opts.get("engine") == "aria2" and not find_aria2():
+        job.log.append("aria2c paoa jay nai - default downloader use hocche")
     for n, extra in enumerate(attempts, 1):
         job.attempt = "try %d/%d" % (n, len(attempts)) if n > 1 else ""
         job.error, job.warn, job.outfile, job.percent, job.speed, job.eta = "", "", "", 0.0, "", ""
+        opts_n = dict(job.opts)
+        if n >= 2:
+            opts_n["engine"] = "auto"  # aria2c e 403 hole built-in downloader diye chesta
         try:
-            cmd, job.dir = build_cmd(job.url, job.opts, extra)
+            cmd, job.dir = build_cmd(job.url, opts_n, extra)
         except Exception as e:
             job.status, job.error = "error", "Option error: %s" % e
             return
         if n > 1:
             job.log.append("--- 403 / format error: notun setting diye abar chesta (%d/%d) ---" % (n, len(attempts)))
         try:
-            rc, retryable = run_once(job, cmd)
+            while True:
+                rc, retryable = run_once(job, cmd)
+                if job.restarting and not job.cancelled and not job.pausing:
+                    job.restarting = False  # speed guard: shei command abar chalao, .part theke resume hobe
+                    job.stage, job.speed, job.eta = "Downloading", "", ""
+                    continue
+                break
         except Exception as e:
             job.status, job.error = "error", str(e)
             return
         if job.cancelled:
             job.status = "cancelled"
+            return
+        if job.pausing:
+            job.pausing = False
+            job.status, job.stage, job.speed, job.eta = "paused", "Paused", "", ""
             return
         if rc == 0 and not job.error:
             job.status, job.percent, job.stage, job.speed, job.eta = "done", 100.0, "Finished", "", ""
@@ -547,15 +661,36 @@ def run_job(job):
         job.error += "  |  Poramorsho: deno.exe ei folder e rakhun (README dekhun) ar 'Update yt-dlp' chapun."
 
 
-def worker():
+MAX_PAR = 1
+RUNNING = 0
+COND = threading.Condition()
+
+
+def _run_wrapper(job):
+    global RUNNING
+    try:
+        run_job(job)
+    except Exception as e:
+        job.status, job.error = "error", str(e)
+    finally:
+        with COND:
+            RUNNING -= 1
+            COND.notify_all()
+
+
+def dispatcher():
+    """Queue theke job niye MAX_PAR ta porjonto ek sathe chalay."""
+    global RUNNING
     while True:
         job = Q.get()
-        if job.status == "cancelled":
-            continue
-        try:
-            run_job(job)
-        except Exception as e:
-            job.status, job.error = "error", str(e)
+        with COND:
+            while RUNNING >= MAX_PAR:
+                COND.wait()
+            if job.status != "queued":  # paused / cancelled / already started
+                continue
+            job.status = "running"
+            RUNNING += 1
+        threading.Thread(target=_run_wrapper, args=(job,), daemon=True).start()
 
 
 def api_download(d):
@@ -625,9 +760,89 @@ def api_clean_retry(d):
     return r
 
 
+def _pause_one(j):
+    if j.status == "queued":
+        j.status = "paused"
+        return True
+    if j.status == "running" and not j.opts.get("section") and (j.stage == "" or j.stage.startswith("Downloading")):
+        j.pausing = True
+        if j.proc:
+            kill_tree(j.proc)
+        return True
+    return False
+
+
+def _resume_one(j):
+    if j.status == "paused":
+        j.status = "queued"
+        Q.put(j)
+        return True
+    return False
+
+
+def api_pause(d):
+    j = find_job(d.get("id"))
+    if not j:
+        return {"error": "not found"}
+    if not _pause_one(j):
+        return {"error": "Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)"}
+    return {"ok": True}
+
+
+def api_resume(d):
+    j = find_job(d.get("id"))
+    if not j:
+        return {"error": "not found"}
+    _resume_one(j)
+    return {"ok": True}
+
+
+def api_pause_all(_):
+    for j in list(JOBS):
+        _pause_one(j)
+    return {"ok": True}
+
+
+def api_resume_all(_):
+    for j in list(JOBS):
+        _resume_one(j)
+    return {"ok": True}
+
+
+def api_settings(d):
+    global MAX_PAR
+    try:
+        n = max(1, min(4, int(d.get("parallel", 1))))
+    except (TypeError, ValueError):
+        n = 1
+    with COND:
+        MAX_PAR = n
+        COND.notify_all()
+    return {"ok": True, "parallel": n}
+
+
+ARIA2_URL = "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip"
+
+
+def api_install_aria2(_):
+    if not IS_WIN:
+        return {"error": "Windows only. Install aria2 with your package manager (apt/brew)."}
+    try:
+        import urllib.request, zipfile, io
+        req = urllib.request.Request(ARIA2_URL, headers={"User-Agent": "Mozilla/5.0"})
+        data = urllib.request.urlopen(req, timeout=180).read()
+        z = zipfile.ZipFile(io.BytesIO(data))
+        name = next(n for n in z.namelist() if n.lower().endswith("aria2c.exe"))
+        with open(os.path.join(BASE, "aria2c.exe"), "wb") as f:
+            f.write(z.read(name))
+        return {"ok": True}
+    except Exception as e:
+        return {"error": "aria2c download failed: %s" % e}
+
+
 def api_clear(_):
     with JOBS_LOCK:
-        JOBS[:] = [j for j in JOBS if j.status in ("queued", "running")]
+        JOBS[:] = [j for j in JOBS if j.status in ("queued", "running", "paused")]
     return {"ok": True}
 
 
@@ -657,11 +872,14 @@ def api_config(_):
     js = find_js()
     return {"ytdlp": YTDLP, "version": get_version() if YTDLP else None,
             "ffmpeg": HAS_LOCAL_FFMPEG or bool(shutil.which("ffmpeg")),
-            "js": js[0] if js else None, "default_dir": DEFAULT_DIR}
+            "js": js[0] if js else None, "default_dir": DEFAULT_DIR,
+            "aria2": bool(find_aria2()), "parallel": MAX_PAR}
 
 
 POST_ROUTES = {"/api/info": api_info, "/api/download": api_download, "/api/cancel": api_cancel,
-               "/api/clear": api_clear, "/api/retry": api_retry, "/api/disk": api_disk, "/api/clean_retry": api_clean_retry, "/api/open": api_open, "/api/update": api_update}
+               "/api/clear": api_clear, "/api/retry": api_retry, "/api/disk": api_disk, "/api/clean_retry": api_clean_retry, "/api/pause": api_pause,
+               "/api/resume": api_resume, "/api/pause_all": api_pause_all, "/api/resume_all": api_resume_all,
+               "/api/settings": api_settings, "/api/install_aria2": api_install_aria2, "/api/open": api_open, "/api/update": api_update}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -716,7 +934,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    threading.Thread(target=worker, daemon=True).start()
+    threading.Thread(target=dispatcher, daemon=True).start()
     srv = None
     for port in range(PORT_START, PORT_START + 20):
         try:
