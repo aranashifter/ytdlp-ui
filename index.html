@@ -237,8 +237,7 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
       <div class="field aud hide"><label class="l" for="afmt" data-i18n="audioFormat"></label><select id="afmt"><option>mp3</option><option>m4a</option><option>opus</option><option>flac</option><option>wav</option><option>best</option></select></div>
       <div class="field"><label class="l" for="thumbOpt" data-i18n="thumbnail"></label><select id="thumbOpt"><option value="none" data-i18n="thumbNone"></option><option value="embed" data-i18n="thumbEmbed"></option><option value="file" data-i18n="thumbFile"></option><option value="both" data-i18n="thumbBoth"></option></select></div>
       <div class="field"><label class="l" for="dir" data-i18n="saveTo"></label><input type="text" id="dir"></div>
-      <div class="field"><label class="l" for="engine" data-i18n="speedL"></label><select id="engine"><option value="smart" data-i18n="engSmart"></option><option value="auto" data-i18n="engAuto"></option><option value="frag" data-i18n="engFrag"></option><option value="aria2" data-i18n="engAria"></option></select></div>
-      <div class="field"><label class="l" for="net" data-i18n="netL"></label><select id="net"><option value="auto" data-i18n="netAuto"></option><option value="v4" data-i18n="netV4"></option></select></div>
+      <div class="field"><label class="l" for="engine" data-i18n="speedL"></label><select id="engine" data-i18n-title="engTip"><option value="smart" data-i18n="engSmart"></option><option value="auto" data-i18n="engAuto"></option></select></div>
     </div>
     <div id="ariaBox" class="msg warn hide lg-icon"><svg class="i"><use href="#i-warn"/></svg><div><span data-i18n="ariaMissing"></span> <button class="btn sm" id="ariaBtn" onclick="installAria2()" style="margin-left:6px"><svg class="i"><use href="#i-download"/></svg><span data-i18n="ariaInstall"></span></button></div></div>
     <div class="tip"><svg class="i"><use href="#i-zap"/></svg><span data-i18n="speedTip"></span></div>
@@ -287,7 +286,6 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
         <label class="sw"><input type="checkbox" id="embedMeta" checked><span class="tr"></span><span class="tx" data-i18n="tMeta"></span></label>
         <label class="sw vid"><input type="checkbox" id="chapters"><span class="tr"></span><span class="tx" data-i18n="tChap"></span></label>
         <label class="sw"><input type="checkbox" id="sponsor"><span class="tr"></span><span class="tx" data-i18n="tSponsor"></span></label>
-        <label class="sw"><input type="checkbox" id="guard" checked><span class="tr"></span><span class="tx" data-i18n="tGuard"></span></label>
         <label class="sw plopt hide"><input type="checkbox" id="plFolder" checked><span class="tr"></span><span class="tx" data-i18n="tPlFolder"></span></label>
         <label class="sw plopt hide"><input type="checkbox" id="plNum" checked><span class="tr"></span><span class="tx" data-i18n="tPlNum"></span></label>
       </div>
@@ -298,7 +296,9 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
       <div class="grid3" style="margin-top:12px">
         <div class="field"><label class="l" for="custom" data-i18n="advCustom"></label><input type="text" id="custom"></div>
         <div class="field"><label class="l" for="rate" data-i18n="advRate"></label><input type="text" id="rate"></div>
+        <div class="field"><span class="l">&nbsp;</span><label class="sw"><input type="checkbox" id="guard" checked><span class="tr"></span><span class="tx" data-i18n="tGuard"></span></label></div>
         <div class="field"><label class="l" for="minSpeed" data-i18n="advMin"></label><input type="text" id="minSpeed" placeholder="2M"></div>
+              <div class="field"><label class="l" for="net" data-i18n="netL"></label><select id="net"><option value="auto" data-i18n="netAuto"></option><option value="v4" data-i18n="netV4"></option></select></div>
         <div class="field"><label class="l" for="section" data-i18n="advSection"></label><input type="text" id="section" data-i18n-ph="advSectionPh"></div>
         <div class="field"><label class="l" for="client" data-i18n="advClient"></label><select id="client"><option value="" data-i18n="advClientAuto"></option><option>tv</option><option>web_safari</option><option>web</option><option>mweb</option><option>android_vr</option><option>ios</option></select></div>
         <div class="field"><span class="l">&nbsp;</span><label class="sw"><input type="checkbox" id="remoteEjs"><span class="tr"></span><span class="tx" data-i18n="advEjs"></span></label></div>
@@ -339,8 +339,13 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 /* ================= i18n ================= */
 const I18N={
 en:{
-engSmart:"Smart (aria2c if installed)",tGuard:"Speed guard: reconnect automatically when speed drops",advMin:"Speed guard minimum speed (e.g. 2M; empty = automatic)",reconn:"reconnected {n}×",wSubs:"Subtitles could not be downloaded (YouTube rate limit, error 429). The video itself downloaded fine; try again later or pick fewer languages.",subMany:"Many auto-subtitle languages can trigger YouTube's rate limit (error 429). Pick only the languages you need.",
-speedL:"Speed mode",engAuto:"Auto (default)",engFrag:"Parallel fragments (-N 8)",engAria:"aria2c · 16 connections (fastest)",netL:"Network",netAuto:"Auto",netV4:"Force IPv4",ariaMissing:"aria2c is not installed yet (free, about 5 MB).",ariaInstall:"Install aria2c",ariaInstalling:"Downloading aria2c…",ariaOk:"aria2c installed. Fast mode is ready.",ariaFail:"Could not install aria2c: ",speedTip:"Speed jumps up and down? YouTube limits each connection and your route changes mid-download. Smart mode uses aria2c (16 connections) and Speed guard reconnects by itself when the speed drops. You can also try Force IPv4 or another YouTube client (Advanced).",s_paused:"paused",st_paused:"Paused",bPause:"Pause",bResume:"Resume",pauseAll:"Pause all",resumeAll:"Resume all",parallelL:"Parallel downloads",totalSpeed:"Total speed",pauseNo:"Pause works only while downloading (not during merge/embed or trim)",srvNoPause:"Pause works only while downloading (not during merge/embed or trim)",
+speedTip:"Speed jumps up and down? YouTube limits each connection. Fastest mode downloads with 16 connections and reconnects by itself when the speed drops. If it is still slow, try Advanced → Force IPv4 or another YouTube client.",
+ariaAuto:"Installing aria2c (one time, ~5 MB) for the fastest downloads…",
+ariaMissing:"Fastest mode needs aria2c (free, ~5 MB). It installs automatically when you press Download, or install it now.",
+engTip:"Fastest uses aria2c with 16 connections and reconnects by itself when the speed drops. Standard is the plain yt-dlp downloader; use it only if Fastest gives errors.",
+engAuto:"Standard (single connection)",
+engSmart:"Fastest (automatic, recommended)",tGuard:"Speed guard: reconnect automatically when speed drops",advMin:"Speed guard minimum speed (e.g. 2M; empty = automatic)",reconn:"reconnected {n}×",wSubs:"Subtitles could not be downloaded (YouTube rate limit, error 429). The video itself downloaded fine; try again later or pick fewer languages.",subMany:"Many auto-subtitle languages can trigger YouTube's rate limit (error 429). Pick only the languages you need.",
+speedL:"Speed mode",netL:"Network",netAuto:"Auto",netV4:"Force IPv4",ariaInstall:"Install aria2c",ariaInstalling:"Downloading aria2c…",ariaOk:"aria2c installed. Fast mode is ready.",ariaFail:"Could not install aria2c: ",s_paused:"paused",st_paused:"Paused",bPause:"Pause",bResume:"Resume",pauseAll:"Pause all",resumeAll:"Resume all",parallelL:"Parallel downloads",totalSpeed:"Total speed",pauseNo:"Pause works only while downloading (not during merge/embed or trim)",srvNoPause:"Pause works only while downloading (not during merge/embed or trim)",
 openFolder:"Open folder",updateYt:"Update yt-dlp",updateNightly:"Nightly",updateNightlyTip:"Try this if YouTube stops working",updating:"Updating…",themeTip:"Switch theme",
 cfgMissing:"yt-dlp.exe not found. Put it in this folder.",missing:"missing",
 jsWarnT:"JS runtime (deno) is missing",
@@ -371,8 +376,13 @@ wCorrupt:"The main file cannot be played (corrupt/incomplete). Press 'Clean & re
 footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"For personal use with content you have the right to download"
 },
 bn:{
-engSmart:"স্মার্ট (aria2c থাকলে সেটি)",tGuard:"স্পিড গার্ড: স্পিড কমলে নিজে নতুন কানেকশন নেবে",advMin:"স্পিড গার্ডের ন্যূনতম স্পিড (যেমন 2M; খালি = অটো)",reconn:"{n} বার নতুন কানেকশন",wSubs:"সাবটাইটেল ডাউনলোড হয়নি (YouTube রেট লিমিট, error 429)। ভিডিও ঠিকমতো নেমেছে; পরে আবার চেষ্টা করুন বা কম ভাষা বাছুন।",subMany:"অনেক অটো-সাবটাইটেল ভাষা বাছলে YouTube রেট লিমিট (error 429) দিতে পারে। শুধু দরকারি ভাষাগুলো বাছুন।",
-speedL:"স্পিড মোড",engAuto:"অটো (ডিফল্ট)",engFrag:"প্যারালাল ফ্র্যাগমেন্ট (-N 8)",engAria:"aria2c · ১৬ কানেকশন (সবচেয়ে দ্রুত)",netL:"নেটওয়ার্ক",netAuto:"অটো",netV4:"IPv4 ব্যবহার করুন",ariaMissing:"aria2c এখনও ইনস্টল করা নেই (ফ্রি, প্রায় ৫ MB)।",ariaInstall:"aria2c ইনস্টল করুন",ariaInstalling:"aria2c ডাউনলোড হচ্ছে…",ariaOk:"aria2c ইনস্টল হয়েছে। ফাস্ট মোড তৈরি।",ariaFail:"aria2c ইনস্টল করা যায়নি: ",speedTip:"স্পিড ওঠানামা করে? YouTube প্রতিটি কানেকশনের স্পিড সীমিত করে, আর ডাউনলোডের মাঝেও রুট বদলাতে পারে। স্মার্ট মোডে aria2c (১৬ কানেকশন) চলে আর স্পিড কমলে স্পিড গার্ড নিজে নতুন কানেকশন নেয়। IPv4 ব্যবহার বা অন্য YouTube ক্লায়েন্টও (অ্যাডভান্সড) চেষ্টা করতে পারেন।",s_paused:"বিরতি",st_paused:"বিরতিতে",bPause:"বিরতি",bResume:"চালু করুন",pauseAll:"সব বিরতি",resumeAll:"সব চালু",parallelL:"একসাথে ডাউনলোড",totalSpeed:"মোট স্পিড",pauseNo:"বিরতি শুধু ডাউনলোড চলার সময় কাজ করে (মার্জ/এমবেড বা ট্রিমের সময় নয়)",srvNoPause:"বিরতি শুধু ডাউনলোড চলার সময় কাজ করে (মার্জ/এমবেড বা ট্রিমের সময় নয়)",
+speedTip:"স্পিড ওঠানামা করে? YouTube প্রতিটি কানেকশনের স্পিড সীমিত করে। দ্রুত মোড ১৬ কানেকশনে নামায় এবং স্পিড কমলে নিজে নতুন কানেকশন নেয়। তবুও ধীর হলে অ্যাডভান্সড থেকে IPv4 ব্যবহার বা অন্য YouTube ক্লায়েন্ট চেষ্টা করুন।",
+ariaAuto:"সবচেয়ে দ্রুত ডাউনলোডের জন্য aria2c ইনস্টল হচ্ছে (একবারই, প্রায় ৫ MB)…",
+ariaMissing:"দ্রুত মোডের জন্য aria2c লাগে (ফ্রি, প্রায় ৫ MB)। ডাউনলোড চাপলে নিজে ইনস্টল হবে, অথবা এখনই ইনস্টল করুন।",
+engTip:"সবচেয়ে দ্রুত মোডে aria2c দিয়ে ১৬ কানেকশনে নামে এবং স্পিড কমলে নিজে নতুন কানেকশন নেয়। সাধারণ মোড হলো সাদামাটা yt-dlp ডাউনলোডার; দ্রুত মোডে এরর এলে তখনই ব্যবহার করুন।",
+engAuto:"সাধারণ (একটি কানেকশন)",
+engSmart:"সবচেয়ে দ্রুত (অটো, সুপারিশকৃত)",tGuard:"স্পিড গার্ড: স্পিড কমলে নিজে নতুন কানেকশন নেবে",advMin:"স্পিড গার্ডের ন্যূনতম স্পিড (যেমন 2M; খালি = অটো)",reconn:"{n} বার নতুন কানেকশন",wSubs:"সাবটাইটেল ডাউনলোড হয়নি (YouTube রেট লিমিট, error 429)। ভিডিও ঠিকমতো নেমেছে; পরে আবার চেষ্টা করুন বা কম ভাষা বাছুন।",subMany:"অনেক অটো-সাবটাইটেল ভাষা বাছলে YouTube রেট লিমিট (error 429) দিতে পারে। শুধু দরকারি ভাষাগুলো বাছুন।",
+speedL:"স্পিড মোড",netL:"নেটওয়ার্ক",netAuto:"অটো",netV4:"IPv4 ব্যবহার করুন",ariaInstall:"aria2c ইনস্টল করুন",ariaInstalling:"aria2c ডাউনলোড হচ্ছে…",ariaOk:"aria2c ইনস্টল হয়েছে। ফাস্ট মোড তৈরি।",ariaFail:"aria2c ইনস্টল করা যায়নি: ",s_paused:"বিরতি",st_paused:"বিরতিতে",bPause:"বিরতি",bResume:"চালু করুন",pauseAll:"সব বিরতি",resumeAll:"সব চালু",parallelL:"একসাথে ডাউনলোড",totalSpeed:"মোট স্পিড",pauseNo:"বিরতি শুধু ডাউনলোড চলার সময় কাজ করে (মার্জ/এমবেড বা ট্রিমের সময় নয়)",srvNoPause:"বিরতি শুধু ডাউনলোড চলার সময় কাজ করে (মার্জ/এমবেড বা ট্রিমের সময় নয়)",
 openFolder:"ফোল্ডার খুলুন",updateYt:"yt-dlp আপডেট",updateNightly:"নাইটলি",updateNightlyTip:"YouTube কাজ না করলে এটি চেষ্টা করুন",updating:"আপডেট হচ্ছে…",themeTip:"থিম পরিবর্তন",
 cfgMissing:"yt-dlp.exe পাওয়া যায়নি। এই ফোল্ডারে রাখুন।",missing:"নেই",
 jsWarnT:"JS runtime (deno) নেই",
@@ -403,8 +413,13 @@ wCorrupt:"মূল ফাইলটি চালানোর উপযোগী 
 footDev:"ডেভেলপার:",devName:"রাকিব আল হাসান",footSrc:"সোর্স ও আপডেট",footPow:"চালিত:",footPers:"শুধু আপনার অধিকার আছে এমন কনটেন্ট ডাউনলোডের জন্য"
 },
 bl:{
-engSmart:"Smart (aria2c thakle seta)",tGuard:"Speed guard: speed kome gele nije notun connection nibe",advMin:"Speed guard er minimum speed (e.g. 2M; khali = auto)",reconn:"{n} bar reconnect",wSubs:"Subtitle download hoyni (YouTube rate limit, error 429). Video thik moto namlo; pore abar chesta korun ba kom language select korun.",subMany:"Onek auto-subtitle language select korle YouTube rate limit (error 429) dite pare. Shudhu dorkari language gulo select korun.",
-speedL:"Speed mode",engAuto:"Auto (default)",engFrag:"Parallel fragments (-N 8)",engAria:"aria2c · 16 connection (sobcheye druto)",netL:"Network",netAuto:"Auto",netV4:"Force IPv4",ariaMissing:"aria2c ekhono install kora nai (free, prai 5 MB).",ariaInstall:"aria2c install korun",ariaInstalling:"aria2c download hochhe…",ariaOk:"aria2c install hoyeche. Fast mode ready.",ariaFail:"aria2c install kora gelo na: ",speedTip:"Speed uthha-nama kore? YouTube proti connection er speed limit kore, ar download er majheo route bodlate pare. Smart mode e aria2c (16 connection) chole ar speed kome gele Speed guard nije notun connection ney. Force IPv4 ba onno YouTube client (Advanced) o try korte paren.",s_paused:"paused",st_paused:"Paused",bPause:"Pause",bResume:"Resume",pauseAll:"Sob pause",resumeAll:"Sob resume",parallelL:"Ek sathe download",totalSpeed:"Total speed",pauseNo:"Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)",srvNoPause:"Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)",
+speedTip:"Speed uthha-nama kore? YouTube proti connection er speed limit kore. Druto mode 16 connection e nambay ar speed kome gele nije notun connection ney. Tobuo dheemi hole Advanced theke Force IPv4 ba onno YouTube client try korun.",
+ariaAuto:"Sobcheye druto download er jonno aria2c install hochhe (ekbar-i, prai 5 MB)…",
+ariaMissing:"Druto mode er jonno aria2c lage (free, prai 5 MB). Download chaple nije install hobe, ba ekhoni install korun.",
+engTip:"Sobcheye druto mode e aria2c diye 16 connection e nambe ar speed kome gele nije notun connection nibe. Standard holo shadamata yt-dlp downloader; druto mode e error ashle tokhon-i use korun.",
+engAuto:"Standard (ekta connection)",
+engSmart:"Sobcheye druto (auto, recommended)",tGuard:"Speed guard: speed kome gele nije notun connection nibe",advMin:"Speed guard er minimum speed (e.g. 2M; khali = auto)",reconn:"{n} bar reconnect",wSubs:"Subtitle download hoyni (YouTube rate limit, error 429). Video thik moto namlo; pore abar chesta korun ba kom language select korun.",subMany:"Onek auto-subtitle language select korle YouTube rate limit (error 429) dite pare. Shudhu dorkari language gulo select korun.",
+speedL:"Speed mode",netL:"Network",netAuto:"Auto",netV4:"Force IPv4",ariaInstall:"aria2c install korun",ariaInstalling:"aria2c download hochhe…",ariaOk:"aria2c install hoyeche. Fast mode ready.",ariaFail:"aria2c install kora gelo na: ",s_paused:"paused",st_paused:"Paused",bPause:"Pause",bResume:"Resume",pauseAll:"Sob pause",resumeAll:"Sob resume",parallelL:"Ek sathe download",totalSpeed:"Total speed",pauseNo:"Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)",srvNoPause:"Pause shudhu download cholar somoy kaj kore (merge/embed ba trim e na)",
 openFolder:"Folder kholo",updateYt:"Update yt-dlp",updateNightly:"Nightly",updateNightlyTip:"YouTube kaj na korle eta try korun",updating:"Update hochhe…",themeTip:"Theme bodlao",
 cfgMissing:"yt-dlp.exe paoa jay nai. Ei folder e rakhun.",missing:"nai",
 jsWarnT:"JS runtime (deno) nai",
@@ -693,6 +708,13 @@ async function startDownload(){
       if(dk.free&&dk.free<lastEst*2.1&&!confirm(t('diskWarn',{free:fmtSize(dk.free),need:fmtSize(lastEst*2.1),size:fmtSize(lastEst)})))return;
     }catch(e){}
   }
+  if(o.engine==='smart'&&cfgData&&!cfgData.aria2&&!window._ariaTried){
+    window._ariaTried=1;toast(t('ariaAuto'),'info',6000);
+    try{const ir=await api('/api/install_aria2',{});
+      if(ir.error)toast(t('ariaFail')+ir.error,'err',9000);
+      else{cfgData=await api('/api/config');ariaCheck();toast(t('ariaOk'),'ok')}
+    }catch(e){}
+  }
   const r=await api('/api/download',{urls:u,options:o});
   if(r.error){toast(srv(r.error),'err');return}
   toast(t('queuedN',{n:r.ids.length}),'ok');
@@ -740,7 +762,7 @@ async function pauseAll(){await api('/api/pause_all',{});loadJobs()}
 async function resumeAll(){await api('/api/resume_all',{});loadJobs()}
 function renderPar(){const n=cfgData&&cfgData.parallel||1;document.querySelectorAll('#parSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.n===n))}
 async function setParallel(n){const r=await api('/api/settings',{parallel:n});if(cfgData)cfgData.parallel=r.parallel||n;renderPar()}
-function ariaCheck(){$('ariaBox').classList.toggle('hide',!(['aria2','smart'].includes($('engine').value)&&cfgData&&!cfgData.aria2))}
+function ariaCheck(){$('ariaBox').classList.toggle('hide',!($('engine').value==='smart'&&cfgData&&!cfgData.aria2))}
 $('engine').onchange=ariaCheck;
 async function installAria2(){
   $('ariaBtn').disabled=true;toast(t('ariaInstalling'));

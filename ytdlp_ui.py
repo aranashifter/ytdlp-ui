@@ -268,8 +268,8 @@ def build_cmd(url, o, pre=None):
     if eng in ("aria2", "smart") and find_aria2():
         a += ["--downloader", "aria2c", "--downloader", "dash,m3u8:native",
               "--downloader-args", "aria2c:-x 16 -s 16 -k 1M"]
-    elif eng == "frag":
-        a += ["-N", "8"]
+    # fragment (HLS/DASH) format e ek sathe kichu tukro nambe; normal file e kono kkhoti nai
+    a += ["-N", "8" if eng == "frag" else "4"]
     if o.get("force_ipv4"):
         a.append("--force-ipv4")
     sec = (o.get("section") or "").strip()

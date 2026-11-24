@@ -38,6 +38,20 @@ try {
         Remove-Item 'deno.zip' -Force
     }
 
+    # aria2c: sobcheye druto download engine (optional - fail korleo setup thambe na)
+    if (-not (Test-Path 'aria2c.exe')) {
+        try {
+            Get-File 'https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip' 'aria2.zip'
+            Expand-Archive -Path 'aria2.zip' -DestinationPath 'aria2_tmp' -Force
+            Get-ChildItem 'aria2_tmp' -Recurse -Include 'aria2c.exe' | Copy-Item -Destination '.' -Force
+        } catch {
+            Write-Host "  aria2c nambano gelo na (optional). Tool er bhitor theke pore install kora jabe." -ForegroundColor Yellow
+        } finally {
+            if (Test-Path 'aria2_tmp') { Remove-Item 'aria2_tmp' -Recurse -Force }
+            if (Test-Path 'aria2.zip') { Remove-Item 'aria2.zip' -Force }
+        }
+    }
+
     if (-not (Has-Python)) {
         Write-Host "  Python paoa jay nai, install kora hocche..." -ForegroundColor Yellow
         if (Get-Command winget -ErrorAction SilentlyContinue) {
