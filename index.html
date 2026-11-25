@@ -57,6 +57,7 @@ input[type=range]{width:100%;accent-color:var(--ac);margin:2px 0}
 .field label.l,.field>.l{display:block;font-size:12px;color:var(--mut);margin-bottom:5px;font-weight:550}
 .sw{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--sf2);position:relative;transition:.15s}
 .sw:hover{border-color:var(--bd2)}
+.sw:has(input:disabled){opacity:.6;cursor:not-allowed}
 .sw input{position:absolute;opacity:0;pointer-events:none}
 .sw .tr{width:34px;height:20px;border-radius:99px;background:var(--sf3);border:1px solid var(--bd2);position:relative;flex:none;transition:.15s}
 .sw .tr::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--mut);transition:.15s}
@@ -222,7 +223,12 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
     <div id="plBox" class="hide sec">
       <div class="row" style="justify-content:space-between;margin-bottom:8px"><b><span data-i18n="plItems"></span> (<span id="plSel">0</span>/<span id="plCnt">0</span>)</b>
         <span class="row" style="gap:6px"><button class="btn sm" onclick="plAll(true)" data-i18n="all"></button><button class="btn sm" onclick="plAll(false)" data-i18n="noneBtn"></button></span></div>
-      <div class="list" id="plList" style="max-height:260px"></div>
+      <div class="row" style="margin-bottom:8px;gap:8px">
+        <input type="text" id="plFilter" data-i18n-ph="plFilterPh" style="flex:1;min-width:150px">
+        <input type="text" id="plRange" data-i18n-ph="plRangePh" style="width:150px">
+        <button class="btn sm" onclick="plSelectRange()" data-i18n="plRangeBtn"></button>
+      </div>
+      <div class="list" id="plList" style="max-height:300px"></div>
     </div>
   </section>
 
@@ -339,6 +345,8 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 /* ================= i18n ================= */
 const I18N={
 en:{
+plFilterPh:"Search in playlist…",plRangePh:"e.g. 1-50, 80",plRangeBtn:"Select range",plExactNote:"For playlists the exact format is turned into \"up to {h}p\", because other videos have different formats. Videos without {h}p download in their best available quality.",plBigConfirm:"You are about to download {n} videos. Continue?",failedN:"{n} failed",wBatch:"{a} of {b} videos could not be downloaded. Retry runs only those again.",wBatchAll:"All videos failed.",
+plOnlyOff:"This link is a playlist. Turn on 'Download as playlist' to get every video, or press Fetch info and pick the videos you want.",plMix:"This is a YouTube Mix (an endless, auto-generated playlist). Press Fetch info and pick the videos you want.",plLimit:"Too many videos selected from a Mix (max 300). Please select fewer.",
 speedTip:"Speed jumps up and down? YouTube limits each connection. Fastest mode downloads with 16 connections and reconnects by itself when the speed drops. If it is still slow, try Advanced → Force IPv4 or another YouTube client.",
 ariaAuto:"Installing aria2c (one time, ~5 MB) for the fastest downloads…",
 ariaMissing:"Fastest mode needs aria2c (free, ~5 MB). It installs automatically when you press Download, or install it now.",
@@ -376,6 +384,8 @@ wCorrupt:"The main file cannot be played (corrupt/incomplete). Press 'Clean & re
 footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"For personal use with content you have the right to download"
 },
 bn:{
+plFilterPh:"প্লেলিস্টে খুঁজুন…",plRangePh:"যেমন 1-50, 80",plRangeBtn:"রেঞ্জ বাছুন",plExactNote:"প্লেলিস্টে নির্দিষ্ট ফরম্যাট বদলে \"সর্বোচ্চ {h}p\" হিসেবে নেওয়া হয়েছে, কারণ অন্য ভিডিওগুলোর ফরম্যাট আলাদা। যেগুলোতে {h}p নেই সেগুলো তাদের সেরা কোয়ালিটিতে নামবে।",plBigConfirm:"আপনি {n}টি ভিডিও ডাউনলোড করতে যাচ্ছেন। চালিয়ে যাবেন?",failedN:"{n}টি ব্যর্থ",wBatch:"{b}টির মধ্যে {a}টি ভিডিও নামেনি। আবার চেষ্টা চাপলে শুধু ওগুলোই আবার চলবে।",wBatchAll:"সব ভিডিও ব্যর্থ হয়েছে।",
+plOnlyOff:"এই লিংকটি একটি প্লেলিস্ট। সব ভিডিও নামাতে 'প্লেলিস্ট হিসেবে ডাউনলোড' চালু করুন, অথবা তথ্য আনুন চেপে পছন্দের ভিডিওগুলো বাছুন।",plMix:"এটি একটি YouTube Mix (অন্তহীন, অটো-জেনারেটেড প্লেলিস্ট)। তথ্য আনুন চেপে পছন্দের ভিডিওগুলো বাছুন।",plLimit:"Mix থেকে অনেক বেশি ভিডিও বাছা হয়েছে (সর্বোচ্চ ৩০০)। কম বাছুন।",
 speedTip:"স্পিড ওঠানামা করে? YouTube প্রতিটি কানেকশনের স্পিড সীমিত করে। দ্রুত মোড ১৬ কানেকশনে নামায় এবং স্পিড কমলে নিজে নতুন কানেকশন নেয়। তবুও ধীর হলে অ্যাডভান্সড থেকে IPv4 ব্যবহার বা অন্য YouTube ক্লায়েন্ট চেষ্টা করুন।",
 ariaAuto:"সবচেয়ে দ্রুত ডাউনলোডের জন্য aria2c ইনস্টল হচ্ছে (একবারই, প্রায় ৫ MB)…",
 ariaMissing:"দ্রুত মোডের জন্য aria2c লাগে (ফ্রি, প্রায় ৫ MB)। ডাউনলোড চাপলে নিজে ইনস্টল হবে, অথবা এখনই ইনস্টল করুন।",
@@ -413,6 +423,8 @@ wCorrupt:"মূল ফাইলটি চালানোর উপযোগী 
 footDev:"ডেভেলপার:",devName:"রাকিব আল হাসান",footSrc:"সোর্স ও আপডেট",footPow:"চালিত:",footPers:"শুধু আপনার অধিকার আছে এমন কনটেন্ট ডাউনলোডের জন্য"
 },
 bl:{
+plFilterPh:"Playlist e khujun…",plRangePh:"e.g. 1-50, 80",plRangeBtn:"Range select",plExactNote:"Playlist e exact format ta \"sorbocho {h}p\" hishebe neya hoyeche, karon onno video gulor format alada. Je gulote {h}p nai segulo tader best available quality te namve.",plBigConfirm:"Apni {n}ta video download korte jachchen. Cholbe?",failedN:"{n}ta fail",wBatch:"{b}ta video r moddhe {a}ta namlo na. Retry chaple shudhu oigulo abar cholbe.",wBatchAll:"Shob video fail hoyeche.",
+plOnlyOff:"Ei link ta ekta playlist. Sob video namate 'Playlist hishebe download' on korun, ba Info anun chepe pochhonder video gulo select korun.",plMix:"Eta ekta YouTube Mix (endless, auto-generated playlist). Info anun chepe pochhonder video gulo select korun.",plLimit:"Mix theke onek beshi video select kora hoyeche (max 300). Kom select korun.",
 speedTip:"Speed uthha-nama kore? YouTube proti connection er speed limit kore. Druto mode 16 connection e nambay ar speed kome gele nije notun connection ney. Tobuo dheemi hole Advanced theke Force IPv4 ba onno YouTube client try korun.",
 ariaAuto:"Sobcheye druto download er jonno aria2c install hochhe (ekbar-i, prai 5 MB)…",
 ariaMissing:"Druto mode er jonno aria2c lage (free, prai 5 MB). Download chaple nije install hobe, ba ekhoni install korun.",
@@ -461,6 +473,8 @@ function applyI18n(root){root=root||document;
 function srv(m){
   if(!m||LANG==='bl')return m;
   const R=[[/yt-dlp\.exe paoa jacche na/,'srvNoYt'],[/^Valid URL din/,'srvBadUrl'],[/^Timeout - internet/,'srvTimeout'],[/^Kono video format paoa jay nai/,'srvNoFormats'],[/^JS runtime \(deno\) paoa jay nai/,'srvNoJs'],[/^Kono valid URL nai/,'srvNoUrl'],[/^Job cholche/,'srvRunning'],[/^Main file play-yogyo noy/,'wCorrupt'],[/^Main video file paoa jay nai/,'wNoMain'],[/^Pause shudhu/,'srvNoPause'],[/^Subtitle download hoyni/,'wSubs']];
+  let bm=m.match(/^Batch: (\d+)\/(\d+) video namlo na\. Retry chaple shudhu oigulo abar cholbe\. ?(.*)$/);if(bm)return t('wBatch',{a:bm[1],b:bm[2]})+(bm[3]?' '+bm[3]:'');
+  bm=m.match(/^Shob video fail hoyeche\. ?(.*)$/);if(bm)return t('wBatchAll')+(bm[1]?' '+bm[1]:'');
   for(const [re,k] of R)if(re.test(m))return t(k);
   let x=m.match(/^File incomplete: duration (\S+), kintu video (\S+)\./);if(x)return t('wIncomplete',{a:x[1],b:x[2]});
   x=m.match(/^Intermediate\/temp file baki ache: (.*)$/);if(x)return t('wJunk',{l:x[1]});
@@ -516,6 +530,7 @@ document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>{
 function urlList(){return $('urls').value.split(/\s+/).map(s=>s.trim()).filter(s=>/^https?:\/\//.test(s))}
 $('urls').addEventListener('input',()=>{
   const u=urlList();
+  $('isPl').disabled=false;
   if(u.length===1&&/[?&]list=/.test(u[0])&&!/[?&]v=/.test(u[0]))$('isPl').checked=true;
   syncPl();
 });
@@ -525,6 +540,7 @@ function syncPl(){document.querySelectorAll('.plopt').forEach(e=>e.classList.tog
 async function fetchInfo(){
   const u=urlList();
   if(!u.length){msg('infoMsg',t('needLink'),'err');return}
+  $('isPl').disabled=false;
   $('fetchBtn').disabled=true;msg('infoMsg',t('fetching'),'info');
   let r;try{r=await api('/api/info',{url:u[0],playlist:$('isPl').checked,cookies:$('cookies').value})}catch(e){r={error:t('offline')}}
   $('fetchBtn').disabled=false;
@@ -540,10 +556,11 @@ function renderInfo(){
   $('vSub').textContent=[info.uploader,info.duration?fmtDur(info.duration):'',info.playlist?t('videosN',{n:info.playlist.count}):''].filter(Boolean).join(' · ');
   if(info.thumbnail){$('thumb').src=info.thumbnail;$('thumb').classList.remove('hide')}else $('thumb').classList.add('hide');
   if(info.playlist){
-    $('isPl').checked=true;syncPl();$('plBox').classList.remove('hide');$('plCnt').textContent=info.playlist.count;
-    $('plList').innerHTML=info.playlist.entries.map(e=>`<label class="pl-item"><input type="checkbox" class="pli" value="${e.index}" checked onchange="plCount()"><small>${e.index}.</small> ${esc(e.title)} <small>${fmtDur(e.duration)}</small></label>`).join('');
+    $('isPl').checked=true;$('isPl').disabled=true;syncPl();$('plBox').classList.remove('hide');$('plCnt').textContent=info.playlist.count;
+    $('plList').innerHTML=info.playlist.entries.map(e=>`<label class="pl-item" data-t="${esc((e.index+' '+e.title).toLowerCase())}"><input type="checkbox" class="pli" value="${e.index}" checked onchange="plCount()"><small>${e.index}.</small> ${esc(e.title)} <small>${fmtDur(e.duration)}</small></label>`).join('');
+    $('plFilter').value='';$('plRange').value='';
     plCount();
-  }else $('plBox').classList.add('hide');
+  }else{$('plBox').classList.add('hide');$('isPl').disabled=false}
   buildQuality();
   if(info.warn&&info.warn.length)$('infoMsg').innerHTML=info.warn.map(w=>`<div class="msg warn lg-icon">${ico('warn')}<div>${esc(srv(w))}</div></div>`).join('');
   renderFormats();renderLists();
@@ -677,7 +694,14 @@ document.addEventListener('change',e=>{
   if(x.classList&&x.classList.contains('sub-a')&&document.querySelectorAll('.sub-a:checked').length>3&&!window._subWarned){window._subWarned=1;toast(t('subMany'),'err',7000)}
   if(info&&(x.id==='height'||x.name==='vf'||x.name==='mode'||['container','compat'].includes(x.id)||(x.classList&&(x.classList.contains('fa')||x.classList.contains('aud-c')))))estimate();
 });
-function plAll(v){document.querySelectorAll('.pli').forEach(c=>c.checked=v);plCount()}
+function plAll(v){document.querySelectorAll('#plList .pl-item:not(.hide) .pli').forEach(c=>c.checked=v);plCount()}
+$('plFilter').oninput=e=>{const q=e.target.value.toLowerCase().trim();document.querySelectorAll('#plList .pl-item').forEach(l=>l.classList.toggle('hide',!!q&&!l.dataset.t.includes(q)))};
+function plSelectRange(){
+  const set=new Set();
+  $('plRange').value.split(',').forEach(p=>{const m=p.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;const a=+m[1],b=m[2]?+m[2]:a;for(let i=Math.min(a,b);i<=Math.max(a,b);i++)set.add(i)});
+  if(!set.size)return;
+  document.querySelectorAll('.pli').forEach(c=>c.checked=set.has(+c.value));plCount();
+}
 function plCount(){$('plSel').textContent=document.querySelectorAll('.pli:checked').length}
 const checked=c=>[...document.querySelectorAll(c+':checked')].map(e=>e.value);
 function toRanges(a){a=a.map(Number).sort((x,y)=>x-y);const o=[];let s=null,p=null;for(const n of a){if(s===null){s=p=n}else if(n===p+1){p=n}else{o.push(s===p?''+s:s+'-'+p);s=p=n}}if(s!==null)o.push(s===p?''+s:s+'-'+p);return o.join(',')}
@@ -697,11 +721,28 @@ async function startDownload(){
     if(ts.dur&&ts.start>=ts.dur){toast(t('trimStartErr'),'err');return}
     o.section=fmtT(ts.start)+'-'+(ts.e===null?'inf':fmtT(ts.e));o.trim_precise=$('trimPrecise').checked;
   }
-  if(!o.custom_format)o.custom_format=exactFormat();
+  const hasInfoPl=u.length===1&&info&&info.playlist&&info._url===u[0];
+  const plCtx=hasInfoPl||o.playlist||u.length>1;
+  if(plCtx){   /* playlist e exact format ID onno video te nai: resolution limit hishebe nao (je video te 4K nai segulo best available namabe) */
+    const hv=$('height').value;
+    if(hv.startsWith('f:')){const row=((info&&info.formats)||[]).find(f=>f.id===hv.slice(2));if(row&&row.h){o.height=String(row.h);toast(t('plExactNote',{h:row.h}),'info',7000)}}
+  }else if(!o.custom_format)o.custom_format=exactFormat();
   if(u.length===1&&info&&!info.playlist&&info.title&&info._url===u[0]){o.title=info.title+(o.section?' ✂ '+o.section:'');o.vid=info.id;o.duration=info.duration}
-  if(u.length===1&&info&&info.playlist&&$('isPl').checked){
+  /* ---- playlist: kokhono bhul kore puro playlist namabe na ---- */
+  const isPlOnly=x=>/[?&]list=/.test(x)&&!/[?&]v=/.test(x)&&!/youtu\.be\//.test(x);
+  const isMix=x=>/[?&]list=RD/.test(x);
+  if(!hasInfoPl){
+    if(u.some(isMix)){toast(t('plMix'),'err',9000);return}
+    if(u.some(isPlOnly)&&!$('isPl').checked){toast(t('plOnlyOff'),'err',9000);return}
+  }
+  let batch=null;
+  if(hasInfoPl){
     const sel=checked('.pli');if(!sel.length){toast(t('noItems'),'err');return}
-    if(sel.length<info.playlist.count)o.playlist_items=toRanges(sel);
+    if(sel.length>100&&!confirm(t('plBigConfirm',{n:sel.length})))return;
+    const byIdx=new Map(info.playlist.entries.map(e=>[String(e.index),e]));
+    const list=sel.map(i=>byIdx.get(String(i))).filter(Boolean);
+    if(list.length&&list.every(e=>/^https?:\/\//.test(e.url||'')))batch=list;           /* exact URL list: index mismatch hoy na */
+    else{o.playlist=true;if(sel.length<info.playlist.count)o.playlist_items=toRanges(sel)}
   }
   if(lastEst>0){
     try{const dk=await api('/api/disk',{dir:o.dir});
@@ -715,9 +756,20 @@ async function startDownload(){
       else{cfgData=await api('/api/config');ariaCheck();toast(t('ariaOk'),'ok')}
     }catch(e){}
   }
-  const r=await api('/api/download',{urls:u,options:o});
-  if(r.error){toast(srv(r.error),'err');return}
-  toast(t('queuedN',{n:r.ids.length}),'ok');
+  let n=0;
+  if(batch){
+    const plTitle=(info.playlist&&info.playlist.title)||info.title||'';
+    const entries=batch.map(e=>({url:e.url,title:e.title,id:e.id,duration:e.duration,index:e.index}));
+    const o2=Object.assign({},o,{playlist:false,entries:entries,subdir:plTitle,title:entries.length===1?entries[0].title:plTitle+' ('+entries.length+')'});
+    const r=await api('/api/download',{urls:[u[0]],options:o2});
+    if(r.error){toast(srv(r.error),'err');return}
+    n=entries.length;
+  }else{
+    const r=await api('/api/download',{urls:u,options:o});
+    if(r.error){toast(srv(r.error),'err');return}
+    n=r.ids.length;
+  }
+  if(n)toast(t('queuedN',{n:n}),'ok');
   loadJobs();
 }
 
@@ -730,7 +782,8 @@ async function loadJobs(){
   $('totSpeed').classList.toggle('hide',!tot);if(tot)$('totSpeed').innerHTML=ico('zap')+esc(t('totalSpeed'))+': <b style="color:var(--tx)">'+esc(fmtSize(tot))+'/s</b>';
   if(!js.length){$('jobs').innerHTML=`<div class="empty">${ico('inbox')}<div>${esc(t('noDl'))}</div></div>`;return}
   $('jobs').innerHTML=js.slice().reverse().map(j=>{
-    const meta=[att(j.attempt),stg(j.stage),j.percent?j.percent.toFixed(1)+'%':'',j.speed,j.eta?t('etaL')+' '+j.eta:'',j.item?t('itemL')+' '+j.item:'',j.reconnects?t('reconn',{n:j.reconnects}):''].filter(Boolean).join(' · ');
+    const pc=j.batch?j.entry_percent:j.percent;
+    const meta=[att(j.attempt),stg(j.stage),pc?pc.toFixed(1)+'%':'',j.speed,j.eta?t('etaL')+' '+j.eta:'',j.item?t('itemL')+' '+j.item:'',j.reconnects?t('reconn',{n:j.reconnects}):'',j.failed?t('failedN',{n:j.failed}):''].filter(Boolean).join(' · ');
     const canCancel=['running','queued','paused'].includes(j.status);
     const pauseBtn=(j.status==='running'||j.status==='queued')
       ?(j.pausable?`<button class="btn sm" onclick="pauseJob('${j.id}')">${ico('pause')}${esc(t('bPause'))}</button>`:`<button class="btn sm" disabled title="${esc(t('pauseNo'))}">${ico('pause')}${esc(t('bPause'))}</button>`):'';
@@ -740,6 +793,7 @@ async function loadJobs(){
       :`<button class="btn sm" onclick="retryJob('${j.id}')" title="${esc(t('retryTip'))}">${ico('undo')}${esc(t('bRetry'))}</button>`+((j.status!=='done'||j.warn)?`<button class="btn sm" onclick="cleanRetry('${j.id}')" title="${esc(t('cleanTip'))}">${ico('trash')}${esc(t('bClean'))}</button>`:''));
     return `<div class="job ${j.status}"><div class="t">${esc(j.title)}<span class="badge ${j.status}">${esc(t('s_'+j.status))}</span></div>
       <div class="bar ${j.busy?'ind':''}"><div style="width:${j.percent}%"></div></div>
+      ${j.batch&&j.current&&j.status==='running'?`<div class="sub" style="display:flex;gap:6px;align-items:flex-start;margin-bottom:2px">${ico('play')}<span style="word-break:break-word">${esc(j.current)}</span></div>`:''}
       <div class="sub">${esc(meta)}</div>
       ${j.outfile?`<div class="sub" style="display:flex;gap:6px;align-items:center;margin-top:4px">${ico('file')}<span style="word-break:break-all">${esc(j.outfile)}</span></div>`:''}
       ${j.warn?`<div class="msg warn lg-icon" style="margin-top:8px">${ico('warn')}<div>${esc(j.warn.split(' | ').map(srv).join(' | '))}</div></div>`:''}

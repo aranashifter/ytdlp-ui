@@ -264,6 +264,8 @@ def build_cmd(url, o, pre=None):
         a += ["--sponsorblock-remove", "sponsor"]
     if o.get("rate"):
         a += ["-r", str(o["rate"])]
+    if o.get("sleep"):  # boro playlist e YouTube rate limit (429) ar bot-check ekano
+        a += ["--sleep-interval", "1", "--max-sleep-interval", "3"]
     eng = o.get("engine", "smart")
     if eng in ("aria2", "smart") and find_aria2():
         a += ["--downloader", "aria2c", "--downloader", "dash,m3u8:native",
@@ -284,6 +286,13 @@ def build_cmd(url, o, pre=None):
 
     # output
     out_dir = os.path.abspath(os.path.expanduser(o.get("dir") or DEFAULT_DIR))
+    # playlist theke bachai kora alada video gulor jonno: playlist-er naam e folder + 001 - number
+    subdir = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", (o.get("subdir") or "")).strip(" .")[:100]
+    if subdir:
+        out_dir = os.path.join(out_dir, subdir)
+    name_prefix = o.get("name_prefix") or ""
+    if not re.fullmatch(r"[0-9]{1,5} - ", name_prefix):
+        name_prefix = ""
     os.makedirs(out_dir, exist_ok=True)
     if o.get("playlist"):
         a.append("--yes-playlist")
@@ -294,7 +303,9 @@ def build_cmd(url, o, pre=None):
         tmpl = folder + prefix + "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
     else:
         a.append("--no-playlist")
-        tmpl = "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
+        if re.search(r"[?&]list=", url) and not re.search(r"[?&]v=", url) and "youtu.be/" not in url:
+            a += ["--playlist-items", "1"]  # playlist-only link e puro playlist (hajar hajar video) namiye felbe na
+        tmpl = name_prefix + "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
     a += ["-P", out_dir, "-o", tmpl]
 
     if o.get("extra"):
@@ -327,6 +338,11 @@ class Job:
         self.outfile = ""
         self.pausing = False
         self.restarting = False
+        self.bi = 0             # batch: ekhon kon video (0-based)
+        self.done_n = 0
+        self.failed = []        # batch: fail howa entry index
+        self.fail_msgs = []
+        self.current = ""
         self.sub_warn = False
         self.g_peak = 0.0       # speed guard: best speed seen
         self.g_restarts = 0
@@ -348,8 +364,13 @@ class Job:
         self.cancelled = False
 
     def public(self):
+        n = len(self.opts.get("entries") or [])
+        pct = self.percent
+        if n:
+            pct = 100.0 if self.status == "done" else min(100.0, (self.bi + min(self.percent, 100.0) / 100.0) / n * 100.0)
         return {"id": self.id, "url": self.url, "title": self.title, "status": self.status,
-                "percent": self.percent, "speed": self.speed, "eta": self.eta, "item": self.item,
+                "batch": n, "current": self.current, "failed": len(self.failed), "entry_percent": self.percent,
+                "percent": pct, "speed": self.speed, "eta": self.eta, "item": self.item,
                 "stage": self.stage, "attempt": self.attempt, "busy": bool(self.opts.get("section") or (self.opts.get("engine", "smart") in ("aria2", "smart") and find_aria2())) and self.status == "running" and self.percent == 0,
                 "reconnects": self.g_restarts,
                 "pausable": (self.status == "queued") or (self.status == "running" and not self.opts.get("section")
@@ -607,24 +628,22 @@ def finalize(job):
         job.stage = "Finished (check warning)"
 
 
-def run_job(job):
-    job.status = "running"
-    job.pausing = job.restarting = job.sub_warn = False
-    job.slow_since = None
-    attempts = attempt_list(job.opts)
-    if job.opts.get("engine") == "aria2" and not find_aria2():
-        job.log.append("aria2c paoa jay nai - default downloader use hocche")
+def _run_attempts(job, url, base_opts):
+    """Ekta URL er sob attempt (403 hole onno client diye). Returns 'ok' | 'ok_err' | 'error' | 'cancelled' | 'paused'."""
+    attempts = attempt_list(base_opts)
+    rc = None
     for n, extra in enumerate(attempts, 1):
         job.attempt = "try %d/%d" % (n, len(attempts)) if n > 1 else ""
         job.error, job.warn, job.outfile, job.percent, job.speed, job.eta = "", "", "", 0.0, "", ""
-        opts_n = dict(job.opts)
+        job.stage = ""
+        opts_n = dict(base_opts)
         if n >= 2:
             opts_n["engine"] = "auto"  # aria2c e 403 hole built-in downloader diye chesta
         try:
-            cmd, job.dir = build_cmd(job.url, opts_n, extra)
+            cmd, job.dir = build_cmd(url, opts_n, extra)
         except Exception as e:
-            job.status, job.error = "error", "Option error: %s" % e
-            return
+            job.error = "Option error: %s" % e
+            return "error"
         if n > 1:
             job.log.append("--- 403 / format error: notun setting diye abar chesta (%d/%d) ---" % (n, len(attempts)))
         try:
@@ -636,29 +655,104 @@ def run_job(job):
                     continue
                 break
         except Exception as e:
-            job.status, job.error = "error", str(e)
-            return
+            job.error = str(e)
+            return "error"
+        if job.cancelled:
+            return "cancelled"
+        if job.pausing:
+            return "paused"
+        if rc == 0 and not job.error:
+            return "ok"
+        if rc == 0:
+            return "ok_err"
+        if not retryable:
+            break
+    job.error = job.error or "yt-dlp exit code %s" % rc
+    if "403" in job.error and not find_js():
+        job.error += "  |  Poramorsho: deno.exe ei folder e rakhun (README dekhun) ar 'Update yt-dlp' chapun."
+    return "error"
+
+
+def _set_paused(job):
+    job.pausing = False
+    job.status, job.stage, job.speed, job.eta = "paused", "Paused", "", ""
+
+
+def run_batch(job):
+    """Playlist theke bachai kora video gulo (exact URL list): ekta ekta kore, fail hole skip kore, pause/resume kore."""
+    entries = job.opts["entries"]
+    n = len(entries)
+    base = {k: v for k, v in job.opts.items() if k != "entries"}
+    base["playlist"] = False
+    base.pop("title", None)
+    if n > 10:
+        base["sleep"] = True
+    while job.bi < n:
         if job.cancelled:
             job.status = "cancelled"
             return
         if job.pausing:
-            job.pausing = False
-            job.status, job.stage, job.speed, job.eta = "paused", "Paused", "", ""
+            _set_paused(job)
             return
-        if rc == 0 and not job.error:
-            job.status, job.percent, job.stage, job.speed, job.eta = "done", 100.0, "Finished", "", ""
-            finalize(job)
+        e = entries[job.bi]
+        job.item = "%d/%d" % (job.bi + 1, n)
+        job.current = e.get("title") or e["url"]
+        o = dict(base)
+        o["vid"], o["duration"] = e.get("id"), e.get("duration")
+        o["subdir"] = base.get("subdir") if base.get("playlist_folder", True) else ""
+        o["name_prefix"] = ("%03d - " % int(e["index"])) if (base.get("number_prefix", True) and e.get("index")) else ""
+        res = _run_attempts(job, e["url"], o)
+        if res == "cancelled":
+            job.status = "cancelled"
             return
-        if rc == 0:
-            job.status, job.stage = "done", "Finished (with errors)"
-            finalize(job)
+        if res == "paused":
+            _set_paused(job)
             return
-        if not retryable:
-            break
-    job.status = "error"
-    job.error = job.error or "yt-dlp exit code %s" % rc
-    if "403" in job.error and not find_js():
-        job.error += "  |  Poramorsho: deno.exe ei folder e rakhun (README dekhun) ar 'Update yt-dlp' chapun."
+        if res in ("ok", "ok_err"):
+            job.done_n += 1
+        else:
+            job.failed.append(job.bi)
+            job.fail_msgs.append("%s: %s" % (job.current, (job.error or "?")[:140]))
+        job.error = ""
+        job.bi += 1
+    job.percent, job.stage, job.speed, job.eta, job.current = 100.0, "Finished", "", "", ""
+    nf = len(job.failed)
+    if nf and not job.done_n:
+        job.status = "error"
+        job.error = "Shob video fail hoyeche. " + (job.fail_msgs[0] if job.fail_msgs else "")
+        return
+    job.status = "done"
+    warns = []
+    if nf:
+        warns.append("Batch: %d/%d video namlo na. Retry chaple shudhu oigulo abar cholbe. %s" % (nf, n, " ; ".join(job.fail_msgs[:3])))
+    if job.sub_warn:
+        warns.append("Subtitle download hoyni (YouTube rate limit 429). Video thik moto namlo; pore abar chesta korun ba kom language select korun.")
+    job.warn = " | ".join(warns)
+    if nf:
+        job.stage = "Finished (check warning)"
+
+
+def run_job(job):
+    job.status = "running"
+    job.pausing = job.restarting = job.sub_warn = False
+    job.slow_since = None
+    if job.opts.get("entries"):
+        return run_batch(job)
+    if job.opts.get("engine") == "aria2" and not find_aria2():
+        job.log.append("aria2c paoa jay nai - default downloader use hocche")
+    res = _run_attempts(job, job.url, job.opts)
+    if res == "cancelled":
+        job.status = "cancelled"
+    elif res == "paused":
+        _set_paused(job)
+    elif res == "ok":
+        job.status, job.percent, job.stage, job.speed, job.eta = "done", 100.0, "Finished", "", ""
+        finalize(job)
+    elif res == "ok_err":
+        job.status, job.stage = "done", "Finished (with errors)"
+        finalize(job)
+    else:
+        job.status = "error"
 
 
 MAX_PAR = 1
@@ -699,6 +793,19 @@ def api_download(d):
     urls = [u.strip() for u in d.get("urls", []) if u.strip().startswith("http")]
     if not urls:
         return {"error": "Kono valid URL nai"}
+    opts_in = d.get("options") or {}
+    if opts_in.get("entries"):
+        clean = []
+        for e in opts_in["entries"][:5000]:
+            if isinstance(e, dict) and str(e.get("url", "")).startswith("http"):
+                clean.append({"url": e["url"], "title": str(e.get("title") or "")[:300], "id": str(e.get("id") or "")[:20],
+                              "duration": e.get("duration") if isinstance(e.get("duration"), (int, float)) else None,
+                              "index": e.get("index") if isinstance(e.get("index"), int) else None})
+        if not clean:
+            return {"error": "Kono valid URL nai"}
+        opts_in = dict(opts_in, entries=clean)
+        d = dict(d, options=opts_in, urls=urls[:1])
+        urls = urls[:1]
     ids = []
     with JOBS_LOCK:
         for u in urls:
@@ -729,7 +836,13 @@ def api_retry(d):
     j = find_job(d.get("id"))
     if not j:
         return {"error": "not found"}
-    return api_download({"urls": [j.url], "options": j.opts})
+    opts = j.opts
+    ents = opts.get("entries")
+    if ents and j.status != "paused":
+        idx = sorted(set(j.failed) | set(range(j.bi, len(ents))))
+        if idx:
+            opts = dict(opts, entries=[ents[i] for i in idx])
+    return api_download({"urls": [j.url], "options": opts})
 
 
 def api_disk(d):
