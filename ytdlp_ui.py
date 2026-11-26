@@ -195,6 +195,12 @@ def api_info(d):
 
 
 # ---------------------------------------------------------------- command builder
+def title_budget(out_dir, prefix_len, suffix_len, folder_len=0):
+    """Windows e pura path 260 char er niche rakhte file er title koto boro hote pare.
+    (aria2c lomba path e 'exited with code 16' dey; extra 45 = ' [id]' + '.fNNN' + '.ext' + '.part' + '.aria2' + margin)"""
+    return max(30, min(150, 250 - len(out_dir) - 1 - folder_len - prefix_len - suffix_len - 45))
+
+
 def build_cmd(url, o, pre=None):
     mode = o.get("mode", "video")
     a = [YTDLP, "--newline", "--retries", "10", "--fragment-retries", "10",
@@ -287,7 +293,7 @@ def build_cmd(url, o, pre=None):
     # output
     out_dir = os.path.abspath(os.path.expanduser(o.get("dir") or DEFAULT_DIR))
     # playlist theke bachai kora alada video gulor jonno: playlist-er naam e folder + 001 - number
-    subdir = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", (o.get("subdir") or "")).strip(" .")[:100]
+    subdir = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", (o.get("subdir") or "")).strip(" .")[:60]
     if subdir:
         out_dir = os.path.join(out_dir, subdir)
     name_prefix = o.get("name_prefix") or ""
@@ -299,13 +305,15 @@ def build_cmd(url, o, pre=None):
         if o.get("playlist_items"):
             a += ["--playlist-items", str(o["playlist_items"])]
         prefix = "%(playlist_index)03d - " if o.get("number_prefix", True) else ""
-        folder = "%(playlist_title).100s/" if o.get("playlist_folder", True) else ""
-        tmpl = folder + prefix + "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
+        folder = "%(playlist_title).60s/" if o.get("playlist_folder", True) else ""
+        tb = title_budget(out_dir, 6 if prefix else 0, len(suffix), 61 if folder else 0)
+        tmpl = folder + prefix + "%%(title).%ds [%%(id)s]" % tb + suffix + ".%(ext)s"
     else:
         a.append("--no-playlist")
         if re.search(r"[?&]list=", url) and not re.search(r"[?&]v=", url) and "youtu.be/" not in url:
             a += ["--playlist-items", "1"]  # playlist-only link e puro playlist (hajar hajar video) namiye felbe na
-        tmpl = name_prefix + "%(title).150s [%(id)s]" + suffix + ".%(ext)s"
+        tb = title_budget(out_dir, len(name_prefix), len(suffix))
+        tmpl = name_prefix + "%%(title).%ds [%%(id)s]" % tb + suffix + ".%(ext)s"
     a += ["-P", out_dir, "-o", tmpl]
 
     if o.get("extra"):
@@ -390,7 +398,7 @@ def kill_tree(proc):
 
 
 RETRY_MARKS = ("HTTP Error 403", "Requested format is not available", "n challenge", "nsig extraction",
-               "Sign in to confirm", "unable to download video data")
+               "Sign in to confirm", "unable to download video data", "aria2c exited")
 MEDIA_EXT = {"mp4", "mkv", "webm", "m4a", "mp3", "opus", "flac", "wav", "mov", "ogg", "aac"}
 
 
@@ -628,6 +636,19 @@ def finalize(job):
         job.stage = "Finished (check warning)"
 
 
+def clean_partials(job, opts):
+    vid = opts.get("vid") or ""
+    if not re.fullmatch(r"[\w-]{6,20}", vid) or not job.dir:
+        return
+    tag = "[%s]" % vid
+    try:
+        for n in os.listdir(job.dir):
+            if tag in n and re.search(r"\.(part|aria2|ytdl)$", n):
+                os.remove(os.path.join(job.dir, n))
+    except OSError:
+        pass
+
+
 def _run_attempts(job, url, base_opts):
     """Ekta URL er sob attempt (403 hole onno client diye). Returns 'ok' | 'ok_err' | 'error' | 'cancelled' | 'paused'."""
     attempts = attempt_list(base_opts)
@@ -638,7 +659,9 @@ def _run_attempts(job, url, base_opts):
         job.stage = ""
         opts_n = dict(base_opts)
         if n >= 2:
-            opts_n["engine"] = "auto"  # aria2c e 403 hole built-in downloader diye chesta
+            if base_opts.get("engine", "smart") in ("smart", "aria2") and find_aria2():
+                clean_partials(job, base_opts)  # aria2 er out-of-order .part file ke standard downloader resume korte parbe na
+            opts_n["engine"] = "auto"  # aria2c e 403/error hole built-in downloader diye chesta
         try:
             cmd, job.dir = build_cmd(url, opts_n, extra)
         except Exception as e:
@@ -1029,6 +1052,14 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json([j.public() for j in JOBS])
         elif self.path == "/api/config":
             self.send_json(api_config(None))
+        elif self.path.startswith("/api/log/"):
+            j = find_job(self.path.rsplit("/", 1)[-1])
+            body = ("\n".join(j.log) if j else "not found").encode("utf-8", "replace")
+            self.send_response(200 if j else 404)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         else:
             self.send_json({"error": "not found"}, 404)
 

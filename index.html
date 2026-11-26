@@ -135,6 +135,8 @@ details[open]>summary::before{transform:rotate(45deg)}
 .bar.ind>div{width:35%!important;animation:slide 1.2s infinite ease-in-out}
 @keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
 .jb{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.logtools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.job pre{overscroll-behavior:contain;-webkit-user-select:text;user-select:text;cursor:text}
 pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:230px;overflow:auto;font:12px/1.5 var(--mono);white-space:pre-wrap;word-break:break-all;margin:8px 0 0}
 .empty{display:grid;place-items:center;padding:28px 10px;color:var(--mut);text-align:center;gap:8px}
 .empty svg.i{width:30px;height:30px;opacity:.5}
@@ -345,6 +347,7 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 /* ================= i18n ================= */
 const I18N={
 en:{
+bCopyLog:"Copy log",bOpenLog:"Open full log",logCopied:"Log copied to clipboard",
 plFilterPh:"Search in playlist…",plRangePh:"e.g. 1-50, 80",plRangeBtn:"Select range",plExactNote:"For playlists the exact format is turned into \"up to {h}p\", because other videos have different formats. Videos without {h}p download in their best available quality.",plBigConfirm:"You are about to download {n} videos. Continue?",failedN:"{n} failed",wBatch:"{a} of {b} videos could not be downloaded. Retry runs only those again.",wBatchAll:"All videos failed.",
 plOnlyOff:"This link is a playlist. Turn on 'Download as playlist' to get every video, or press Fetch info and pick the videos you want.",plMix:"This is a YouTube Mix (an endless, auto-generated playlist). Press Fetch info and pick the videos you want.",plLimit:"Too many videos selected from a Mix (max 300). Please select fewer.",
 speedTip:"Speed jumps up and down? YouTube limits each connection. Fastest mode downloads with 16 connections and reconnects by itself when the speed drops. If it is still slow, try Advanced → Force IPv4 or another YouTube client.",
@@ -384,6 +387,7 @@ wCorrupt:"The main file cannot be played (corrupt/incomplete). Press 'Clean & re
 footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"For personal use with content you have the right to download"
 },
 bn:{
+bCopyLog:"লগ কপি",bOpenLog:"পুরো লগ খুলুন",logCopied:"লগ কপি হয়েছে",
 plFilterPh:"প্লেলিস্টে খুঁজুন…",plRangePh:"যেমন 1-50, 80",plRangeBtn:"রেঞ্জ বাছুন",plExactNote:"প্লেলিস্টে নির্দিষ্ট ফরম্যাট বদলে \"সর্বোচ্চ {h}p\" হিসেবে নেওয়া হয়েছে, কারণ অন্য ভিডিওগুলোর ফরম্যাট আলাদা। যেগুলোতে {h}p নেই সেগুলো তাদের সেরা কোয়ালিটিতে নামবে।",plBigConfirm:"আপনি {n}টি ভিডিও ডাউনলোড করতে যাচ্ছেন। চালিয়ে যাবেন?",failedN:"{n}টি ব্যর্থ",wBatch:"{b}টির মধ্যে {a}টি ভিডিও নামেনি। আবার চেষ্টা চাপলে শুধু ওগুলোই আবার চলবে।",wBatchAll:"সব ভিডিও ব্যর্থ হয়েছে।",
 plOnlyOff:"এই লিংকটি একটি প্লেলিস্ট। সব ভিডিও নামাতে 'প্লেলিস্ট হিসেবে ডাউনলোড' চালু করুন, অথবা তথ্য আনুন চেপে পছন্দের ভিডিওগুলো বাছুন।",plMix:"এটি একটি YouTube Mix (অন্তহীন, অটো-জেনারেটেড প্লেলিস্ট)। তথ্য আনুন চেপে পছন্দের ভিডিওগুলো বাছুন।",plLimit:"Mix থেকে অনেক বেশি ভিডিও বাছা হয়েছে (সর্বোচ্চ ৩০০)। কম বাছুন।",
 speedTip:"স্পিড ওঠানামা করে? YouTube প্রতিটি কানেকশনের স্পিড সীমিত করে। দ্রুত মোড ১৬ কানেকশনে নামায় এবং স্পিড কমলে নিজে নতুন কানেকশন নেয়। তবুও ধীর হলে অ্যাডভান্সড থেকে IPv4 ব্যবহার বা অন্য YouTube ক্লায়েন্ট চেষ্টা করুন।",
@@ -423,6 +427,7 @@ wCorrupt:"মূল ফাইলটি চালানোর উপযোগী 
 footDev:"ডেভেলপার:",devName:"রাকিব আল হাসান",footSrc:"সোর্স ও আপডেট",footPow:"চালিত:",footPers:"শুধু আপনার অধিকার আছে এমন কনটেন্ট ডাউনলোডের জন্য"
 },
 bl:{
+bCopyLog:"Log copy",bOpenLog:"Pura log kholo",logCopied:"Log copy hoyeche",
 plFilterPh:"Playlist e khujun…",plRangePh:"e.g. 1-50, 80",plRangeBtn:"Range select",plExactNote:"Playlist e exact format ta \"sorbocho {h}p\" hishebe neya hoyeche, karon onno video gulor format alada. Je gulote {h}p nai segulo tader best available quality te namve.",plBigConfirm:"Apni {n}ta video download korte jachchen. Cholbe?",failedN:"{n}ta fail",wBatch:"{b}ta video r moddhe {a}ta namlo na. Retry chaple shudhu oigulo abar cholbe.",wBatchAll:"Shob video fail hoyeche.",
 plOnlyOff:"Ei link ta ekta playlist. Sob video namate 'Playlist hishebe download' on korun, ba Info anun chepe pochhonder video gulo select korun.",plMix:"Eta ekta YouTube Mix (endless, auto-generated playlist). Info anun chepe pochhonder video gulo select korun.",plLimit:"Mix theke onek beshi video select kora hoyeche (max 300). Kom select korun.",
 speedTip:"Speed uthha-nama kore? YouTube proti connection er speed limit kore. Druto mode 16 connection e nambay ar speed kome gele nije notun connection ney. Tobuo dheemi hole Advanced theke Force IPv4 ba onno YouTube client try korun.",
@@ -773,6 +778,7 @@ async function startDownload(){
   loadJobs();
 }
 
+function setH(node,h){if(node._h!==h){node.innerHTML=h;node._h=h}}
 async function loadJobs(){
   let js;
   try{js=await api('/api/jobs');$('offline').classList.add('hide')}
@@ -780,8 +786,18 @@ async function loadJobs(){
   lastJobs=js;$('jobCount').textContent=js.length;
   const tot=js.filter(j=>j.status==='running').reduce((a,j)=>a+spdBytes(j.speed),0);
   $('totSpeed').classList.toggle('hide',!tot);if(tot)$('totSpeed').innerHTML=ico('zap')+esc(t('totalSpeed'))+': <b style="color:var(--tx)">'+esc(fmtSize(tot))+'/s</b>';
-  if(!js.length){$('jobs').innerHTML=`<div class="empty">${ico('inbox')}<div>${esc(t('noDl'))}</div></div>`;return}
-  $('jobs').innerHTML=js.slice().reverse().map(j=>{
+  const box=$('jobs');
+  if(!js.length){box.innerHTML=`<div class="empty">${ico('inbox')}<div>${esc(t('noDl'))}</div></div>`;return}
+  const emp=box.querySelector('.empty');if(emp)emp.remove();
+  const want=js.slice().reverse(),ids=new Set(want.map(j=>j.id));
+  box.querySelectorAll('.job').forEach(el=>{if(!ids.has(el.dataset.id))el.remove()});
+  let prev=null;
+  want.forEach(j=>{
+    let el=box.querySelector('.job[data-id="'+j.id+'"]');
+    if(!el){el=document.createElement('div');el.dataset.id=j.id;el.innerHTML='<div class="jhead"></div><div class="jprog"></div><div class="jextra"></div><div class="jb"></div><div class="jlog"></div>'}
+    const ref=prev?prev.nextSibling:box.firstChild;
+    if(el!==ref)box.insertBefore(el,ref);
+    prev=el;el.className='job '+j.status;
     const pc=j.batch?j.entry_percent:j.percent;
     const meta=[att(j.attempt),stg(j.stage),pc?pc.toFixed(1)+'%':'',j.speed,j.eta?t('etaL')+' '+j.eta:'',j.item?t('itemL')+' '+j.item:'',j.reconnects?t('reconn',{n:j.reconnects}):'',j.failed?t('failedN',{n:j.failed}):''].filter(Boolean).join(' · ');
     const canCancel=['running','queued','paused'].includes(j.status);
@@ -791,16 +807,43 @@ async function loadJobs(){
     const btns=resumeBtn+pauseBtn+`<button class="btn sm" onclick="toggleLog('${j.id}')">${ico('term')}${esc(t('bLog'))}</button>`+(canCancel
       ?`<button class="btn sm" onclick="cancelJob('${j.id}')">${ico('x')}${esc(t('bCancel'))}</button>`
       :`<button class="btn sm" onclick="retryJob('${j.id}')" title="${esc(t('retryTip'))}">${ico('undo')}${esc(t('bRetry'))}</button>`+((j.status!=='done'||j.warn)?`<button class="btn sm" onclick="cleanRetry('${j.id}')" title="${esc(t('cleanTip'))}">${ico('trash')}${esc(t('bClean'))}</button>`:''));
-    return `<div class="job ${j.status}"><div class="t">${esc(j.title)}<span class="badge ${j.status}">${esc(t('s_'+j.status))}</span></div>
-      <div class="bar ${j.busy?'ind':''}"><div style="width:${j.percent}%"></div></div>
-      ${j.batch&&j.current&&j.status==='running'?`<div class="sub" style="display:flex;gap:6px;align-items:flex-start;margin-bottom:2px">${ico('play')}<span style="word-break:break-word">${esc(j.current)}</span></div>`:''}
-      <div class="sub">${esc(meta)}</div>
-      ${j.outfile?`<div class="sub" style="display:flex;gap:6px;align-items:center;margin-top:4px">${ico('file')}<span style="word-break:break-all">${esc(j.outfile)}</span></div>`:''}
-      ${j.warn?`<div class="msg warn lg-icon" style="margin-top:8px">${ico('warn')}<div>${esc(j.warn.split(' | ').map(srv).join(' | '))}</div></div>`:''}
-      ${j.error&&j.status==='error'?`<div class="msg err" style="margin-top:8px">${esc(srvErr(j.error))}${j.error.length<14?esc(t('logHint')):''}</div>`:''}
-      <div class="jb">${btns}</div>
-      ${openLogs.has(j.id)?`<pre>${esc(j.log.join('\n'))}</pre>`:''}</div>`}).join('');
+    setH(el.querySelector('.jhead'),`<div class="t">${esc(j.title)}<span class="badge ${j.status}">${esc(t('s_'+j.status))}</span></div>`);
+    setH(el.querySelector('.jprog'),`<div class="bar ${j.busy?'ind':''}"><div style="width:${j.percent}%"></div></div>`
+      +(j.batch&&j.current&&j.status==='running'?`<div class="sub" style="display:flex;gap:6px;align-items:flex-start;margin-bottom:2px">${ico('play')}<span style="word-break:break-word">${esc(j.current)}</span></div>`:'')
+      +`<div class="sub">${esc(meta)}</div>`);
+    setH(el.querySelector('.jextra'),(j.outfile?`<div class="sub" style="display:flex;gap:6px;align-items:center;margin-top:4px">${ico('file')}<span style="word-break:break-all">${esc(j.outfile)}</span></div>`:'')
+      +(j.warn?`<div class="msg warn lg-icon" style="margin-top:8px">${ico('warn')}<div>${esc(j.warn.split(' | ').map(srv).join(' | '))}</div></div>`:'')
+      +(j.error&&j.status==='error'?`<div class="msg err" style="margin-top:8px">${esc(srvErr(j.error))}${j.error.length<14?esc(t('logHint')):''}</div>`:''));
+    setH(el.querySelector('.jb'),btns);
+    updLog(el,j);
+  });
 }
+/* log: pre ke har second e abar toiri kora hoy na, tai select / copy / scroll kaj kore */
+function updLog(card,j){
+  const box=card.querySelector('.jlog');
+  if(!openLogs.has(j.id)){if(box.firstChild){box.innerHTML='';box._h=''}return}
+  let pre=box.querySelector('pre'),first=false;
+  if(!pre){
+    box.innerHTML=`<div class="logtools"><button class="btn sm" onclick="copyLog('${j.id}')">${ico('file')}<span>${esc(t('bCopyLog'))}</span></button><button class="btn sm" onclick="openLogTab('${j.id}')">${ico('term')}<span>${esc(t('bOpenLog'))}</span></button></div><pre></pre>`;
+    pre=box.querySelector('pre');first=true;
+  }
+  const txt=j.log.join('\n');
+  if(pre._t===txt)return;
+  const sel=window.getSelection();
+  if(sel&&!sel.isCollapsed&&pre.contains(sel.anchorNode))return;      /* user text select korche: ekhon update korbo na */
+  const atBottom=first||pre.scrollHeight-pre.scrollTop-pre.clientHeight<30,st=pre.scrollTop;
+  pre.textContent=txt;pre._t=txt;
+  pre.scrollTop=atBottom?pre.scrollHeight:st;
+}
+async function copyLog(id){
+  try{
+    const tx=await (await fetch('/api/log/'+id)).text();
+    if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(tx);
+    else{const ta=document.createElement('textarea');ta.value=tx;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
+    toast(t('logCopied'),'ok');
+  }catch(e){toast(String(e),'err')}
+}
+function openLogTab(id){window.open('/api/log/'+id,'_blank')}
 function toggleLog(id){openLogs.has(id)?openLogs.delete(id):openLogs.add(id);loadJobs()}
 async function cancelJob(id){
   const j=lastJobs.find(x=>x.id===id);
