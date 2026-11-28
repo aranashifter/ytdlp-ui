@@ -322,7 +322,7 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 
   <footer class="foot">
     <span data-i18n="footDev"></span> <b data-i18n="devName"></b> &middot; GitHub: <a href="https://github.com/aranashifter" target="_blank" rel="noopener">@aranashifter</a> &middot; <a href="https://github.com/aranashifter/ytdlp-ui" target="_blank" rel="noopener" data-i18n="footSrc"></a><br>
-    <span data-i18n="footPow"></span> <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> &amp; <a href="https://ffmpeg.org" target="_blank" rel="noopener">FFmpeg</a> &middot; <span data-i18n="footPers"></span>
+    <span data-i18n="footPow"></span> <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> &amp; <a href="https://ffmpeg.org" target="_blank" rel="noopener">FFmpeg</a> &middot; <span data-i18n="footPers"></span><br><span class="sub" id="verTag"></span>
   </footer>
 </main>
 
@@ -344,9 +344,11 @@ pre{background:#07090d;color:#cfd5e6;border-radius:10px;padding:10px;max-height:
 <div class="toasts" id="toasts"></div>
 
 <script>
+const UI_VERSION='1.7';
 /* ================= i18n ================= */
 const I18N={
 en:{
+verMismatch:"index.html (v{ui}) and ytdlp_ui.py (v{srv}) are different versions. Replace BOTH files with the latest ones and restart the tool.",bSelLog:"Select all",logSelected:"Log selected. Press Ctrl+C to copy.",logCopyBlocked:"The browser blocked copying. The full log opened in a new tab: press Ctrl+A then Ctrl+C there.",
 bCopyLog:"Copy log",bOpenLog:"Open full log",logCopied:"Log copied to clipboard",
 plFilterPh:"Search in playlist…",plRangePh:"e.g. 1-50, 80",plRangeBtn:"Select range",plExactNote:"For playlists the exact format is turned into \"up to {h}p\", because other videos have different formats. Videos without {h}p download in their best available quality.",plBigConfirm:"You are about to download {n} videos. Continue?",failedN:"{n} failed",wBatch:"{a} of {b} videos could not be downloaded. Retry runs only those again.",wBatchAll:"All videos failed.",
 plOnlyOff:"This link is a playlist. Turn on 'Download as playlist' to get every video, or press Fetch info and pick the videos you want.",plMix:"This is a YouTube Mix (an endless, auto-generated playlist). Press Fetch info and pick the videos you want.",plLimit:"Too many videos selected from a Mix (max 300). Please select fewer.",
@@ -387,6 +389,7 @@ wCorrupt:"The main file cannot be played (corrupt/incomplete). Press 'Clean & re
 footDev:"Developed by",devName:"Rakib Al Hasan",footSrc:"Source & updates",footPow:"Powered by",footPers:"For personal use with content you have the right to download"
 },
 bn:{
+verMismatch:"index.html (v{ui}) ও ytdlp_ui.py (v{srv}) আলাদা ভার্সন। দুটো ফাইলই সর্বশেষ ভার্সন দিয়ে বদলান এবং tool আবার চালু করুন।",bSelLog:"সব সিলেক্ট",logSelected:"লগ সিলেক্ট হয়েছে। কপি করতে Ctrl+C চাপুন।",logCopyBlocked:"ব্রাউজার কপি আটকে দিয়েছে। পুরো লগ নতুন ট্যাবে খুলেছে: সেখানে Ctrl+A তারপর Ctrl+C চাপুন।",
 bCopyLog:"লগ কপি",bOpenLog:"পুরো লগ খুলুন",logCopied:"লগ কপি হয়েছে",
 plFilterPh:"প্লেলিস্টে খুঁজুন…",plRangePh:"যেমন 1-50, 80",plRangeBtn:"রেঞ্জ বাছুন",plExactNote:"প্লেলিস্টে নির্দিষ্ট ফরম্যাট বদলে \"সর্বোচ্চ {h}p\" হিসেবে নেওয়া হয়েছে, কারণ অন্য ভিডিওগুলোর ফরম্যাট আলাদা। যেগুলোতে {h}p নেই সেগুলো তাদের সেরা কোয়ালিটিতে নামবে।",plBigConfirm:"আপনি {n}টি ভিডিও ডাউনলোড করতে যাচ্ছেন। চালিয়ে যাবেন?",failedN:"{n}টি ব্যর্থ",wBatch:"{b}টির মধ্যে {a}টি ভিডিও নামেনি। আবার চেষ্টা চাপলে শুধু ওগুলোই আবার চলবে।",wBatchAll:"সব ভিডিও ব্যর্থ হয়েছে।",
 plOnlyOff:"এই লিংকটি একটি প্লেলিস্ট। সব ভিডিও নামাতে 'প্লেলিস্ট হিসেবে ডাউনলোড' চালু করুন, অথবা তথ্য আনুন চেপে পছন্দের ভিডিওগুলো বাছুন।",plMix:"এটি একটি YouTube Mix (অন্তহীন, অটো-জেনারেটেড প্লেলিস্ট)। তথ্য আনুন চেপে পছন্দের ভিডিওগুলো বাছুন।",plLimit:"Mix থেকে অনেক বেশি ভিডিও বাছা হয়েছে (সর্বোচ্চ ৩০০)। কম বাছুন।",
@@ -427,6 +430,7 @@ wCorrupt:"মূল ফাইলটি চালানোর উপযোগী 
 footDev:"ডেভেলপার:",devName:"রাকিব আল হাসান",footSrc:"সোর্স ও আপডেট",footPow:"চালিত:",footPers:"শুধু আপনার অধিকার আছে এমন কনটেন্ট ডাউনলোডের জন্য"
 },
 bl:{
+verMismatch:"index.html (v{ui}) ar ytdlp_ui.py (v{srv}) alada version. Duita file-i latest diye replace korun ar tool abar chalu korun.",bSelLog:"Sob select",logSelected:"Log select hoyeche. Copy korte Ctrl+C chapun.",logCopyBlocked:"Browser copy atkiye diyeche. Pura log notun tab e khulechhe: sekhane Ctrl+A tarpor Ctrl+C chapun.",
 bCopyLog:"Log copy",bOpenLog:"Pura log kholo",logCopied:"Log copy hoyeche",
 plFilterPh:"Playlist e khujun…",plRangePh:"e.g. 1-50, 80",plRangeBtn:"Range select",plExactNote:"Playlist e exact format ta \"sorbocho {h}p\" hishebe neya hoyeche, karon onno video gulor format alada. Je gulote {h}p nai segulo tader best available quality te namve.",plBigConfirm:"Apni {n}ta video download korte jachchen. Cholbe?",failedN:"{n}ta fail",wBatch:"{b}ta video r moddhe {a}ta namlo na. Retry chaple shudhu oigulo abar cholbe.",wBatchAll:"Shob video fail hoyeche.",
 plOnlyOff:"Ei link ta ekta playlist. Sob video namate 'Playlist hishebe download' on korun, ba Info anun chepe pochhonder video gulo select korun.",plMix:"Eta ekta YouTube Mix (endless, auto-generated playlist). Info anun chepe pochhonder video gulo select korun.",plLimit:"Mix theke onek beshi video select kora hoyeche (max 300). Kom select korun.",
@@ -522,10 +526,15 @@ function renderCfg(){
 /* ================= init ================= */
 (async()=>{
   setLang(LANG);themeIcon();
-  try{cfgData=await api('/api/config');$('dir').value=cfgData.default_dir;renderCfg();renderPar();ariaCheck()}catch(e){}
+  try{cfgData=await api('/api/config');$('dir').value=cfgData.default_dir;renderCfg();renderPar();ariaCheck();verCheck()}catch(e){}
   loadJobs();setInterval(loadJobs,1000);
 })();
 
+function verCheck(){
+  const srvV=(cfgData&&cfgData.tool)||'old';
+  $('verTag').textContent='UI v'+UI_VERSION+' · server v'+srvV;
+  if(srvV!==UI_VERSION)toast(t('verMismatch',{ui:UI_VERSION,srv:srvV}),'err',20000);
+}
 function mode(){return document.querySelector('input[name=mode]:checked').value}
 document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>{
   const a=mode()==='audio';
@@ -817,17 +826,28 @@ async function loadJobs(){
     setH(el.querySelector('.jb'),btns);
     updLog(el,j);
   });
+  openLogs.forEach(id=>{if(ids.has(id))refreshLog(id)});
 }
 /* log: pre ke har second e abar toiri kora hoy na, tai select / copy / scroll kaj kore */
+let fullLogs={},_logBusy={};
+async function refreshLog(id){
+  if(_logBusy[id])return;_logBusy[id]=1;
+  try{
+    fullLogs[id]=await (await fetch('/api/log/'+id)).text();
+    const j=lastJobs.find(x=>x.id===id),card=document.querySelector('.job[data-id="'+id+'"]');
+    if(j&&card)updLog(card,j);
+  }catch(e){}
+  _logBusy[id]=0;
+}
 function updLog(card,j){
   const box=card.querySelector('.jlog');
-  if(!openLogs.has(j.id)){if(box.firstChild){box.innerHTML='';box._h=''}return}
+  if(!openLogs.has(j.id)){if(box.firstChild){box.innerHTML=''}return}
   let pre=box.querySelector('pre'),first=false;
   if(!pre){
-    box.innerHTML=`<div class="logtools"><button class="btn sm" onclick="copyLog('${j.id}')">${ico('file')}<span>${esc(t('bCopyLog'))}</span></button><button class="btn sm" onclick="openLogTab('${j.id}')">${ico('term')}<span>${esc(t('bOpenLog'))}</span></button></div><pre></pre>`;
+    box.innerHTML=`<div class="logtools"><button class="btn sm" onclick="copyLog('${j.id}')">${ico('file')}<span>${esc(t('bCopyLog'))}</span></button><button class="btn sm" onclick="selectLog('${j.id}')">${ico('term')}<span>${esc(t('bSelLog'))}</span></button><button class="btn sm" onclick="openLogTab('${j.id}')">${ico('term')}<span>${esc(t('bOpenLog'))}</span></button></div><pre></pre>`;
     pre=box.querySelector('pre');first=true;
   }
-  const txt=j.log.join('\n');
+  const txt=fullLogs[j.id]!==undefined?fullLogs[j.id]:j.log.join('\n');
   if(pre._t===txt)return;
   const sel=window.getSelection();
   if(sel&&!sel.isCollapsed&&pre.contains(sel.anchorNode))return;      /* user text select korche: ekhon update korbo na */
@@ -835,16 +855,28 @@ function updLog(card,j){
   pre.textContent=txt;pre._t=txt;
   pre.scrollTop=atBottom?pre.scrollHeight:st;
 }
-async function copyLog(id){
+/* copy: click er sathe sathe (await chhara) copy hoy, noile browser block kore */
+function copyLog(id){
+  const j=lastJobs.find(x=>x.id===id);
+  const tx=fullLogs[id]!==undefined?fullLogs[id]:(j?j.log.join('\n'):'');
+  let ok=false;
   try{
-    const tx=await (await fetch('/api/log/'+id)).text();
-    if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(tx);
-    else{const ta=document.createElement('textarea');ta.value=tx;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
-    toast(t('logCopied'),'ok');
-  }catch(e){toast(String(e),'err')}
+    const ta=document.createElement('textarea');
+    ta.value=tx;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,tx.length);
+    ok=document.execCommand('copy');ta.remove();
+  }catch(e){}
+  if(ok){toast(t('logCopied'),'ok');return}
+  const fail=()=>{window.open('/api/log/'+id,'_blank');toast(t('logCopyBlocked'),'err',9000)};
+  if(navigator.clipboard)navigator.clipboard.writeText(tx).then(()=>toast(t('logCopied'),'ok'),fail);else fail();
+}
+function selectLog(id){
+  const pre=document.querySelector('.job[data-id="'+id+'"] pre');if(!pre)return;
+  const r=document.createRange();r.selectNodeContents(pre);
+  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);toast(t('logSelected'),'ok',3000);
 }
 function openLogTab(id){window.open('/api/log/'+id,'_blank')}
-function toggleLog(id){openLogs.has(id)?openLogs.delete(id):openLogs.add(id);loadJobs()}
+function toggleLog(id){if(openLogs.has(id)){openLogs.delete(id)}else{openLogs.add(id);refreshLog(id)}loadJobs()}
 async function cancelJob(id){
   const j=lastJobs.find(x=>x.id===id);
   if(j&&j.status==='running'&&j.stage&&!/^Downloading/.test(j.stage)&&!confirm(t('cancelC')))return;

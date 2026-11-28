@@ -7,6 +7,7 @@ Put this file, index.html and start.bat in the SAME folder as yt-dlp.exe / ffmpe
 import json, os, re, shlex, shutil, subprocess, sys, threading, queue, time, uuid, webbrowser
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
+TOOL_VERSION = "1.7"  # index.html er UI_VERSION er sathe mila thakte hobe
 BASE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DIR = os.path.join(BASE, "Downloads")
 IS_WIN = os.name == "nt"
@@ -1009,7 +1010,7 @@ def api_config(_):
     return {"ytdlp": YTDLP, "version": get_version() if YTDLP else None,
             "ffmpeg": HAS_LOCAL_FFMPEG or bool(shutil.which("ffmpeg")),
             "js": js[0] if js else None, "default_dir": DEFAULT_DIR,
-            "aria2": bool(find_aria2()), "parallel": MAX_PAR}
+            "aria2": bool(find_aria2()), "parallel": MAX_PAR, "tool": TOOL_VERSION}
 
 
 POST_ROUTES = {"/api/info": api_info, "/api/download": api_download, "/api/cancel": api_cancel,
